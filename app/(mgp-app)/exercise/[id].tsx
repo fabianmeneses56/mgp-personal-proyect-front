@@ -1,12 +1,15 @@
+import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { Colors } from "@/constants/theme";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useLayoutEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import React, { useCallback, useLayoutEffect } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 const ExerciseDetailScreen = () => {
-  const { name, weightGrams, weight, weightUnit, categoryName } =
+  const { id, name, weightGrams, weight, weightUnit, categoryName } =
     useLocalSearchParams<{
     id: string;
     name?: string;
@@ -16,6 +19,7 @@ const ExerciseDetailScreen = () => {
     categoryName?: string;
     }>();
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const cardBackground = useThemeColor(
     { light: "#F7F8FC", dark: "#20242C" },
     "background"
@@ -28,17 +32,80 @@ const ExerciseDetailScreen = () => {
     { light: "#667085", dark: "#98A2B3" },
     "text"
   );
+  const dangerBackground = useThemeColor(
+    { light: "#FFF1F2", dark: "#3A1E23" },
+    "background"
+  );
+  const dangerBorder = useThemeColor(
+    { light: "#FBCDD2", dark: "#6E2933" },
+    "background"
+  );
+  const dangerText = useThemeColor(
+    { light: "#B42318", dark: "#FF8A80" },
+    "text"
+  );
 
   const displayWeight =
     weight && weight !== ""
       ? `${weight} ${weightUnit || "kg"}`
       : `${weightGrams ? Number(weightGrams) / 1000 : 0} kg`;
 
+  const deleteExerciseMutation = useMutation({
+    mutationFn: deleteExercise,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      router.back();
+      Alert.alert(
+        "Ejercicio eliminado",
+        `${String(name ?? "El ejercicio")} se elimino correctamente`
+      );
+    },
+    onError(error) {
+      Alert.alert("Error", error.message);
+    },
+  });
+
+  const confirmDeleteExercise = useCallback(() => {
+    Alert.alert(
+      "Eliminar ejercicio",
+      `Se eliminara ${String(name ?? "este ejercicio")} y ya no aparecera en tu lista.`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: deleteExerciseMutation.isPending ? "Eliminando..." : "Eliminar",
+          style: "destructive",
+          onPress: () => deleteExerciseMutation.mutate(String(id)),
+        },
+      ]
+    );
+  }, [deleteExerciseMutation, id, name]);
+
   useLayoutEffect(() => {
-    if (name) {
-      navigation.setOptions({ title: String(name) });
-    }
-  }, [name, navigation]);
+    navigation.setOptions({
+      title: name ? String(name) : undefined,
+      headerRight: () => (
+        <Pressable
+          onPress={confirmDeleteExercise}
+          disabled={deleteExerciseMutation.isPending}
+          style={({ pressed }) => [
+            styles.deleteHeaderButton,
+            { opacity: pressed || deleteExerciseMutation.isPending ? 0.75 : 1 },
+          ]}
+        >
+          <Ionicons name="trash-outline" size={22} color={dangerText} />
+        </Pressable>
+      ),
+    });
+  }, [
+    confirmDeleteExercise,
+    dangerText,
+    deleteExerciseMutation.isPending,
+    name,
+    navigation,
+  ]);
 
   return (
     <View style={styles.container}>
@@ -74,6 +141,40 @@ const ExerciseDetailScreen = () => {
         <ThemedText style={[styles.metricHint, { color: mutedText }]}>
           Usa este valor para identificar rapidamente la carga del ejercicio.
         </ThemedText>
+      </View>
+
+      <View
+        style={[
+          styles.dangerZone,
+          { backgroundColor: dangerBackground, borderColor: dangerBorder },
+        ]}
+      >
+        <View style={styles.dangerZoneHeader}>
+          <Ionicons name="warning-outline" size={22} color={dangerText} />
+          <ThemedText style={[styles.dangerZoneTitle, { color: dangerText }]}>
+            Zona de peligro
+          </ThemedText>
+        </View>
+        <ThemedText style={[styles.dangerZoneDescription, { color: mutedText }]}>
+          Si ya no necesitas este ejercicio, puedes eliminarlo desde aqui.
+        </ThemedText>
+        <Pressable
+          onPress={confirmDeleteExercise}
+          disabled={deleteExerciseMutation.isPending}
+          style={({ pressed }) => [
+            styles.deleteExerciseButton,
+            {
+              backgroundColor: dangerText,
+              opacity: pressed || deleteExerciseMutation.isPending ? 0.82 : 1,
+            },
+          ]}
+        >
+          <Text style={styles.deleteExerciseButtonText}>
+            {deleteExerciseMutation.isPending
+              ? "Eliminando ejercicio..."
+              : "Eliminar ejercicio"}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -136,6 +237,38 @@ const styles = StyleSheet.create({
   metricHint: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  deleteHeaderButton: {
+    padding: 4,
+  },
+  dangerZone: {
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: 20,
+    gap: 12,
+  },
+  dangerZoneHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dangerZoneTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  dangerZoneDescription: {
+    lineHeight: 22,
+  },
+  deleteExerciseButton: {
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteExerciseButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
 

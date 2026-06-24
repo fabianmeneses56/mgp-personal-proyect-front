@@ -1,8 +1,10 @@
 import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { deleteCategory } from "@/core/categories/actions/delete-category.action";
 import { createExercise } from "@/core/exercises/actions/create-exercise.action";
+import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { Colors } from "@/constants/theme";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
+import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
@@ -30,6 +32,7 @@ const CategoryScreen = () => {
   }>();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
+  const { categoriesQuery } = useCategories();
   const cardBackground = useThemeColor(
     { light: "#F7F8FC", dark: "#20242C" },
     "background"
@@ -73,7 +76,12 @@ const CategoryScreen = () => {
       return [];
     }
   }, [data]);
-  const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
+  const exercises = useMemo<Exercise[]>(() => {
+    const fromQuery = categoriesQuery.data?.find(
+      (category) => category.id === id
+    )?.exercise;
+    return fromQuery ?? initialExercises;
+  }, [categoriesQuery.data, id, initialExercises]);
   const [modalVisible, setModalVisible] = useState(false);
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseWeight, setExerciseWeight] = useState("");
@@ -94,13 +102,6 @@ const CategoryScreen = () => {
   const exerciseMutation = useMutation({
     mutationFn: createExercise,
     onSuccess(data) {
-      setExercises((currentExercises) => [
-        ...currentExercises,
-        {
-          ...data,
-          id: data.id ?? `${data.name}-${Date.now()}`,
-        },
-      ]);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setExerciseName("");
       setExerciseWeight("");
@@ -127,6 +128,41 @@ const CategoryScreen = () => {
       Alert.alert("Error", error.message);
     },
   });
+
+  const deleteExerciseMutation = useMutation({
+    mutationFn: deleteExercise,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError(error) {
+      Alert.alert("Error", error.message);
+    },
+  });
+
+  const confirmDeleteExercise = useCallback(
+    (exercise: Exercise) => {
+      Alert.alert(
+        "Eliminar ejercicio",
+        `Se eliminara ${exercise.name} y ya no aparecera en tu lista.`,
+        [
+          {
+            text: "Cancelar",
+            style: "cancel",
+          },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: () => {
+              if (exercise.id) {
+                deleteExerciseMutation.mutate(exercise.id);
+              }
+            },
+          },
+        ]
+      );
+    },
+    [deleteExerciseMutation]
+  );
 
   const confirmDeleteCategory = useCallback(() => {
     Alert.alert(
@@ -236,10 +272,23 @@ const CategoryScreen = () => {
           <ThemedText style={styles.badgeText}>{`${index + 1}`}</ThemedText>
         </View>
 
-        <View style={styles.chevronContainer}>
-          <ThemedText style={[styles.chevron, { color: Colors.light.primary }]}>
-            ›
-          </ThemedText>
+        <View style={styles.cardHeaderActions}>
+          <Pressable
+            onPress={() => confirmDeleteExercise(item)}
+            disabled={deleteExerciseMutation.isPending}
+            style={({ pressed }) => [
+              styles.deleteExerciseIconButton,
+              { opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1 },
+            ]}
+          >
+            <Ionicons name="trash-outline" size={18} color={dangerText} />
+          </Pressable>
+
+          <View style={styles.chevronContainer}>
+            <ThemedText style={[styles.chevron, { color: Colors.light.primary }]}>
+              ›
+            </ThemedText>
+          </View>
         </View>
       </View>
 
@@ -455,6 +504,19 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     fontSize: 14,
     fontWeight: "700",
+  },
+  cardHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  deleteExerciseIconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(180, 35, 24, 0.08)",
   },
   chevronContainer: {
     width: 34,
