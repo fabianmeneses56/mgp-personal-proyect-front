@@ -5,7 +5,10 @@ export interface Category {
 }
 
 export interface Exercise {
-  id: string;
+  id?: string;
   name: string;
-  weightGrams: number;
+  weightGrams?: number;
+  weight?: number;
+  weightUnit?: string;
+  category?: string;
 }

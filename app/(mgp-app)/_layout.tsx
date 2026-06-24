@@ -64,6 +64,13 @@ const CheckAuthenticationLayout = () => {
             title: "Ejercicios",
           }}
         />
+
+        <Stack.Screen
+          name="exercise/[id]"
+          options={{
+            title: "Detalle del ejercicio",
+          }}
+        />
       </Stack>
     </>
   );
