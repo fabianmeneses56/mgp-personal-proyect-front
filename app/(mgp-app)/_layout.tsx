@@ -1,9 +1,10 @@
-import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
-import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Redirect, Stack } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+
+import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
+import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
 const CheckAuthenticationLayout = () => {
   const { status, checkStatus } = useAuthStore();
@@ -13,10 +14,6 @@ const CheckAuthenticationLayout = () => {
   useEffect(() => {
     checkStatus();
   }, []);
-
-  useEffect(() => {
-    console.log(status);
-  }, [status]);
 
   if (status === "checking") {
     return (
@@ -34,30 +31,41 @@ const CheckAuthenticationLayout = () => {
   }
 
   if (status === "unauthenticated") {
-    // Guardar la ruta del usuario
     return <Redirect href="/auth/login" />;
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: backgroundColor,
-        },
-        contentStyle: {
-          backgroundColor: backgroundColor,
-        },
-      }}
-    >
-      <Stack.Screen
-        name="(home)/index"
-        options={{
-          title: "Categorias",
-          headerLeft: () => <LogoutIconButton />,
+    <>
+      <Stack
+        screenOptions={{
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: backgroundColor,
+          },
+          contentStyle: {
+            backgroundColor: backgroundColor,
+          },
         }}
-      />
-    </Stack>
+      >
+        <Stack.Screen
+          name="(home)/index"
+          options={{
+            title: "Categorias",
+            headerLeft: () => <LogoutIconButton />,
+            // headerRight: () => (
+            //   <AddNewButton onPressAction={() => setModalVisible(true)} />
+            // ),
+          }}
+        />
+
+        <Stack.Screen
+          name="category/[id]"
+          options={{
+            title: "Ejercicios",
+          }}
+        />
+      </Stack>
+    </>
   );
 };
 

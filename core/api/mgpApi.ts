@@ -16,7 +16,10 @@ const mgpApi = axios.create({
 });
 
 mgpApi.interceptors.request.use(async (config) => {
-  // Verificar si tenemos un token en el secure storage
+  if (config.url?.includes("/auth/login")) {
+    return config;
+  }
+
   const token = await SecureStorageAdapter.getItem("token");
 
   if (token) {

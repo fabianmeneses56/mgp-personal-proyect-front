@@ -31,7 +31,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       await SecureStorageAdapter.deleteItem("token");
       return false;
     }
-    console.log("aca", token, user);
 
     set({
       status: "authenticated",
@@ -39,7 +38,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       user: user,
     });
 
-    await SecureStorageAdapter.setItem("token", token);
+    void SecureStorageAdapter.setItem("token", token);
 
     return true;
   },
