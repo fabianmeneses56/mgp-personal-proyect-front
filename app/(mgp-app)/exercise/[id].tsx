@@ -30,7 +30,9 @@ const ExerciseDetailScreen = () => {
   );
 
   const displayWeight =
-    weight && weight !== "" ? `${weight} ${weightUnit || "kg"}` : `${weightGrams ?? "0"} g`;
+    weight && weight !== ""
+      ? `${weight} ${weightUnit || "kg"}`
+      : `${weightGrams ? Number(weightGrams) / 1000 : 0} kg`;
 
   useLayoutEffect(() => {
     if (name) {

@@ -84,7 +84,11 @@ const CategoryScreen = () => {
       return `${exercise.weight} ${exercise.weightUnit ?? "kg"}`;
     }
 
-    return `${exercise.weightGrams ?? 0} g`;
+    if (exercise.weightGrams !== undefined) {
+      return `${exercise.weightGrams / 1000} kg`;
+    }
+
+    return "0 kg";
   };
 
   const exerciseMutation = useMutation({
