@@ -1,12 +1,21 @@
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { Colors } from "@/constants/theme";
+import RegisterWeightModal from "@/presentation/exercises/components/RegisterWeightModal";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useCallback, useLayoutEffect } from "react";
+import React, { useCallback, useLayoutEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+
+interface WeightHistoryEntry {
+  id: string;
+  weight: number;
+  weightUnit: string;
+  note?: string;
+  date: string;
+}
 
 const ExerciseDetailScreen = () => {
   const { id, name, weightGrams, weight, weightUnit, categoryName } =
@@ -44,11 +53,64 @@ const ExerciseDetailScreen = () => {
     { light: "#B42318", dark: "#FF8A80" },
     "text"
   );
+  const modalBackground = useThemeColor(
+    { light: "#FFFFFF", dark: "#151718" },
+    "background"
+  );
 
-  const displayWeight =
+  const initialWeightValue =
     weight && weight !== ""
-      ? `${weight} ${weightUnit || "kg"}`
-      : `${weightGrams ? Number(weightGrams) / 1000 : 0} kg`;
+      ? Number(weight)
+      : weightGrams
+        ? Number(weightGrams) / 1000
+        : 0;
+  const initialWeightUnit = weightUnit || "kg";
+
+  const [weightHistory, setWeightHistory] = useState<WeightHistoryEntry[]>([
+    {
+      id: "initial",
+      weight: initialWeightValue,
+      weightUnit: initialWeightUnit,
+      date: new Date().toISOString(),
+    },
+  ]);
+
+  const latestWeightEntry = [...weightHistory].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )[0];
+  const displayWeight = `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`;
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [formWeight, setFormWeight] = useState("");
+  const [formWeightUnit, setFormWeightUnit] = useState("kg");
+  const [formNote, setFormNote] = useState("");
+
+  const closeWeightModal = () => {
+    setFormWeight("");
+    setFormWeightUnit("kg");
+    setFormNote("");
+    setModalVisible(false);
+  };
+
+  const handleSubmitWeight = () => {
+    const parsedWeight = Number(formWeight);
+
+    if (!formWeight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
+      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
+      return;
+    }
+
+    const newEntry: WeightHistoryEntry = {
+      id: Date.now().toString(),
+      weight: parsedWeight,
+      weightUnit: formWeightUnit,
+      note: formNote.trim() ? formNote.trim() : undefined,
+      date: new Date().toISOString(),
+    };
+
+    setWeightHistory((prev) => [newEntry, ...prev]);
+    closeWeightModal();
+  };
 
   const deleteExerciseMutation = useMutation({
     mutationFn: deleteExercise,
@@ -145,6 +207,54 @@ const ExerciseDetailScreen = () => {
 
       <View
         style={[
+          styles.historyCard,
+          { backgroundColor: cardBackground, borderColor },
+        ]}
+      >
+        <ThemedText type="subtitle" style={styles.historyTitle}>
+          Historico de pesos
+        </ThemedText>
+
+        {[...weightHistory]
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          .map((entry) => (
+            <View
+              key={entry.id}
+              style={[styles.historyRow, { borderColor }]}
+            >
+              <View style={styles.historyRowTop}>
+                <ThemedText style={styles.historyWeight}>
+                  {entry.weight} {entry.weightUnit}
+                </ThemedText>
+                <ThemedText style={[styles.historyDate, { color: mutedText }]}>
+                  {new Date(entry.date).toLocaleDateString()}
+                </ThemedText>
+              </View>
+              {entry.note ? (
+                <ThemedText style={[styles.historyNote, { color: mutedText }]}>
+                  {entry.note}
+                </ThemedText>
+              ) : null}
+            </View>
+          ))}
+
+        <Pressable
+          onPress={() => setModalVisible(true)}
+          style={({ pressed }) => [
+            styles.registerWeightButton,
+            { opacity: pressed ? 0.82 : 1 },
+          ]}
+        >
+          <Text style={styles.registerWeightButtonText}>
+            Registrar nuevo peso
+          </Text>
+        </Pressable>
+      </View>
+
+      <View
+        style={[
           styles.dangerZone,
           { backgroundColor: dangerBackground, borderColor: dangerBorder },
         ]}
@@ -176,6 +286,21 @@ const ExerciseDetailScreen = () => {
           </Text>
         </Pressable>
       </View>
+
+      <RegisterWeightModal
+        visible={modalVisible}
+        weight={formWeight}
+        weightUnit={formWeightUnit}
+        note={formNote}
+        onChangeWeight={setFormWeight}
+        onChangeWeightUnit={setFormWeightUnit}
+        onChangeNote={setFormNote}
+        onSubmit={handleSubmitWeight}
+        onClose={closeWeightModal}
+        modalBackground={modalBackground}
+        borderColor={borderColor}
+        mutedText={mutedText}
+      />
     </View>
   );
 };
@@ -240,6 +365,49 @@ const styles = StyleSheet.create({
   },
   deleteHeaderButton: {
     padding: 4,
+  },
+  historyCard: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 22,
+    gap: 14,
+  },
+  historyTitle: {
+    marginBottom: 4,
+  },
+  historyRow: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+    gap: 4,
+  },
+  historyRowTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  historyWeight: {
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  historyDate: {
+    fontSize: 13,
+  },
+  historyNote: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  registerWeightButton: {
+    marginTop: 4,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.primary,
+  },
+  registerWeightButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
   dangerZone: {
     borderWidth: 1,
