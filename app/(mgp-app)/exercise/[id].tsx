@@ -4,10 +4,12 @@ import RegisterWeightModal from "@/presentation/exercises/components/RegisterWei
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useLayoutEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 interface WeightHistoryEntry {
   id: string;
@@ -77,19 +79,78 @@ const ExerciseDetailScreen = () => {
 
   const latestWeightEntry = [...weightHistory].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )[0];
-  const displayWeight = `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`;
+  )[0] ?? null;
+  const displayWeight = latestWeightEntry
+    ? `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`
+    : "Sin registros";
 
   const [modalVisible, setModalVisible] = useState(false);
   const [formWeight, setFormWeight] = useState("");
   const [formWeightUnit, setFormWeightUnit] = useState("kg");
   const [formNote, setFormNote] = useState("");
+  const [formDate, setFormDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
 
   const closeWeightModal = () => {
     setFormWeight("");
     setFormWeightUnit("kg");
     setFormNote("");
+    setFormDate(new Date());
+    setShowDatePicker(false);
+    setEditingEntryId(null);
     setModalVisible(false);
+  };
+
+  const handleEditEntry = (entry: WeightHistoryEntry) => {
+    setEditingEntryId(entry.id);
+    setFormWeight(entry.weight.toString());
+    setFormWeightUnit(entry.weightUnit);
+    setFormNote(entry.note ?? "");
+    setFormDate(new Date(entry.date));
+    setShowDatePicker(false);
+    setModalVisible(true);
+  };
+
+  const handleDeleteEntry = (entryId: string) => {
+    Alert.alert(
+      "Eliminar registro",
+      "¿Seguro que quieres eliminar esta entrada del historial?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () =>
+            setWeightHistory((prev) => prev.filter((e) => e.id !== entryId)),
+        },
+      ]
+    );
+  };
+
+  const openCreateWeightModal = () => {
+    setEditingEntryId(null);
+    setFormWeight("");
+    setFormWeightUnit("kg");
+    setFormNote("");
+    setFormDate(new Date());
+    setModalVisible(true);
+  };
+
+  const toggleDatePicker = () => {
+    setShowDatePicker((prev) => !prev);
+  };
+
+  const handleChangeDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setFormDate(selectedDate);
+    }
   };
 
   const handleSubmitWeight = () => {
@@ -100,15 +161,31 @@ const ExerciseDetailScreen = () => {
       return;
     }
 
-    const newEntry: WeightHistoryEntry = {
-      id: Date.now().toString(),
-      weight: parsedWeight,
-      weightUnit: formWeightUnit,
-      note: formNote.trim() ? formNote.trim() : undefined,
-      date: new Date().toISOString(),
-    };
+    if (editingEntryId) {
+      setWeightHistory((prev) =>
+        prev.map((e) =>
+          e.id === editingEntryId
+            ? {
+                ...e,
+                weight: parsedWeight,
+                weightUnit: formWeightUnit,
+                note: formNote.trim() ? formNote.trim() : undefined,
+                date: formDate.toISOString(),
+              }
+            : e
+        )
+      );
+    } else {
+      const newEntry: WeightHistoryEntry = {
+        id: Date.now().toString(),
+        weight: parsedWeight,
+        weightUnit: formWeightUnit,
+        note: formNote.trim() ? formNote.trim() : undefined,
+        date: formDate.toISOString(),
+      };
+      setWeightHistory((prev) => [newEntry, ...prev]);
+    }
 
-    setWeightHistory((prev) => [newEntry, ...prev]);
     closeWeightModal();
   };
 
@@ -170,7 +247,7 @@ const ExerciseDetailScreen = () => {
   ]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View
         style={[
           styles.heroCard,
@@ -215,33 +292,61 @@ const ExerciseDetailScreen = () => {
           Historico de pesos
         </ThemedText>
 
+        {weightHistory.length === 0 ? (
+          <ThemedText style={[styles.emptyHistory, { color: mutedText }]}>
+            Sin registros de peso
+          </ThemedText>
+        ) : null}
+
         {[...weightHistory]
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
           .map((entry) => (
-            <View
-              key={entry.id}
-              style={[styles.historyRow, { borderColor }]}
-            >
-              <View style={styles.historyRowTop}>
-                <ThemedText style={styles.historyWeight}>
-                  {entry.weight} {entry.weightUnit}
-                </ThemedText>
-                <ThemedText style={[styles.historyDate, { color: mutedText }]}>
-                  {new Date(entry.date).toLocaleDateString()}
-                </ThemedText>
-              </View>
-              {entry.note ? (
-                <ThemedText style={[styles.historyNote, { color: mutedText }]}>
-                  {entry.note}
-                </ThemedText>
-              ) : null}
+            <View key={entry.id} style={[styles.historyRowWrapper, { borderColor }]}>
+              <ReanimatedSwipeable
+                friction={2}
+                overshootRight={false}
+                renderRightActions={() => (
+                  <View style={styles.swipeActions}>
+                    <Pressable
+                      onPress={() => handleEditEntry(entry)}
+                      style={[styles.swipeActionEdit, { backgroundColor: Colors.light.primary }]}
+                    >
+                      <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+                      <Text style={styles.swipeActionText}>Editar</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDeleteEntry(entry.id)}
+                      style={[styles.swipeActionDelete, { backgroundColor: "#C0392B" }]}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
+                      <Text style={styles.swipeActionText}>Eliminar</Text>
+                    </Pressable>
+                  </View>
+                )}
+              >
+                <View style={[styles.historyRow, { backgroundColor: cardBackground }]}>
+                  <View style={styles.historyRowTop}>
+                    <ThemedText style={styles.historyWeight}>
+                      {entry.weight} {entry.weightUnit}
+                    </ThemedText>
+                    <ThemedText style={[styles.historyDate, { color: mutedText }]}>
+                      {new Date(entry.date).toLocaleDateString()}
+                    </ThemedText>
+                  </View>
+                  {entry.note ? (
+                    <ThemedText style={[styles.historyNote, { color: mutedText }]}>
+                      {entry.note}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              </ReanimatedSwipeable>
             </View>
           ))}
 
         <Pressable
-          onPress={() => setModalVisible(true)}
+          onPress={openCreateWeightModal}
           style={({ pressed }) => [
             styles.registerWeightButton,
             { opacity: pressed ? 0.82 : 1 },
@@ -292,24 +397,33 @@ const ExerciseDetailScreen = () => {
         weight={formWeight}
         weightUnit={formWeightUnit}
         note={formNote}
+        date={formDate}
+        showDatePicker={showDatePicker}
+        title={editingEntryId ? "Editar peso" : "Registrar nuevo peso"}
+        submitLabel={editingEntryId ? "Guardar cambios" : "Guardar peso"}
         onChangeWeight={setFormWeight}
         onChangeWeightUnit={setFormWeightUnit}
         onChangeNote={setFormNote}
+        onPressDate={toggleDatePicker}
+        onChangeDate={handleChangeDate}
         onSubmit={handleSubmitWeight}
         onClose={closeWeightModal}
         modalBackground={modalBackground}
         borderColor={borderColor}
         mutedText={mutedText}
       />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  container: {
     padding: 20,
     gap: 18,
+    paddingBottom: 40,
   },
   heroCard: {
     borderWidth: 1,
@@ -375,10 +489,22 @@ const styles = StyleSheet.create({
   historyTitle: {
     marginBottom: 4,
   },
+  emptyHistory: {
+    fontSize: 15,
+    textAlign: "center",
+    paddingVertical: 8,
+  },
+  historyRowWrapper: {
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
   historyRow: {
-    borderTopWidth: 1,
-    paddingTop: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     gap: 4,
+    minHeight: 56,
+    justifyContent: "center",
   },
   historyRowTop: {
     flexDirection: "row",
@@ -395,6 +521,36 @@ const styles = StyleSheet.create({
   historyNote: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  swipeActions: {
+    flexDirection: "row",
+    width: 136,
+    alignSelf: "stretch",
+  },
+  swipeActionEdit: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "column",
+    gap: 4,
+    paddingVertical: 8,
+  },
+  swipeActionDelete: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "column",
+    gap: 4,
+    paddingVertical: 8,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    borderLeftWidth: 1,
+    borderLeftColor: "rgba(255,255,255,0.25)",
+  },
+  swipeActionText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 12,
   },
   registerWeightButton: {
     marginTop: 4,
