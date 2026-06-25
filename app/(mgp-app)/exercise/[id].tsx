@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useLayoutEffect, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 interface WeightHistoryEntry {
@@ -17,6 +18,49 @@ interface WeightHistoryEntry {
   weightUnit: string;
   note?: string;
   date: string;
+}
+
+const SWIPE_ACTIONS_WIDTH = 136;
+
+function SwipeRightActions({
+  drag,
+  onEdit,
+  onDelete,
+}: {
+  drag: SharedValue<number>;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: interpolate(
+          drag.value,
+          [-SWIPE_ACTIONS_WIDTH, 0],
+          [0, SWIPE_ACTIONS_WIDTH],
+          Extrapolation.CLAMP
+        ),
+      },
+    ],
+  }));
+  return (
+    <Animated.View style={[styles.swipeActions, animatedStyle]}>
+      <Pressable
+        onPress={onEdit}
+        style={[styles.swipeActionEdit, { backgroundColor: Colors.light.primary }]}
+      >
+        <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+        <Text style={styles.swipeActionText}>Editar</Text>
+      </Pressable>
+      <Pressable
+        onPress={onDelete}
+        style={[styles.swipeActionDelete, { backgroundColor: "#C0392B" }]}
+      >
+        <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
+        <Text style={styles.swipeActionText}>Eliminar</Text>
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 const ExerciseDetailScreen = () => {
@@ -307,23 +351,12 @@ const ExerciseDetailScreen = () => {
               <ReanimatedSwipeable
                 friction={2}
                 overshootRight={false}
-                renderRightActions={() => (
-                  <View style={styles.swipeActions}>
-                    <Pressable
-                      onPress={() => handleEditEntry(entry)}
-                      style={[styles.swipeActionEdit, { backgroundColor: Colors.light.primary }]}
-                    >
-                      <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-                      <Text style={styles.swipeActionText}>Editar</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDeleteEntry(entry.id)}
-                      style={[styles.swipeActionDelete, { backgroundColor: "#C0392B" }]}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
-                      <Text style={styles.swipeActionText}>Eliminar</Text>
-                    </Pressable>
-                  </View>
+                renderRightActions={(_, drag) => (
+                  <SwipeRightActions
+                    drag={drag}
+                    onEdit={() => handleEditEntry(entry)}
+                    onDelete={() => handleDeleteEntry(entry.id)}
+                  />
                 )}
               >
                 <View style={[styles.historyRow, { backgroundColor: cardBackground }]}>
