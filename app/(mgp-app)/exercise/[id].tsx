@@ -3,22 +3,16 @@ import { Colors } from "@/constants/theme";
 import RegisterWeightModal from "@/presentation/exercises/components/RegisterWeightModal";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
+import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Ionicons } from "@expo/vector-icons";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useCallback, useLayoutEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-
-interface WeightHistoryEntry {
-  id: string;
-  weight: number;
-  weightUnit: string;
-  note?: string;
-  date: string;
-}
+import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 const SWIPE_ACTIONS_WIDTH = 136;
 
@@ -59,6 +53,51 @@ function SwipeRightActions({
         <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
         <Text style={styles.swipeActionText}>Eliminar</Text>
       </Pressable>
+    </Animated.View>
+  );
+}
+
+function AnimatedHistoryRow({
+  isDeleting,
+  onRemoveComplete,
+  children,
+}: {
+  isDeleting: boolean;
+  onRemoveComplete: () => void;
+  children: React.ReactNode;
+}) {
+  const opacity = useSharedValue(1);
+  const height = useSharedValue<number | null>(null);
+
+  useEffect(() => {
+    if (!isDeleting) return;
+    opacity.value = withTiming(0, { duration: 180 }, (opacityDone) => {
+      if (!opacityDone) return;
+      height.value = withTiming(0, { duration: 200 }, (heightDone) => {
+        if (heightDone) runOnJS(onRemoveComplete)();
+      });
+    });
+  }, [isDeleting]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const style: ViewStyle = { opacity: opacity.value, overflow: "hidden" };
+    if (height.value !== null) {
+      style.height = height.value;
+    }
+    return style;
+  });
+
+  return (
+    <Animated.View
+      style={animatedStyle}
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height;
+        if (height.value === null && h > 0) {
+          height.value = h;
+        }
+      }}
+    >
+      {children}
     </Animated.View>
   );
 }
@@ -104,22 +143,8 @@ const ExerciseDetailScreen = () => {
     "background"
   );
 
-  const initialWeightValue =
-    weight && weight !== ""
-      ? Number(weight)
-      : weightGrams
-        ? Number(weightGrams) / 1000
-        : 0;
-  const initialWeightUnit = weightUnit || "kg";
-
-  const [weightHistory, setWeightHistory] = useState<WeightHistoryEntry[]>([
-    {
-      id: "initial",
-      weight: initialWeightValue,
-      weightUnit: initialWeightUnit,
-      date: new Date().toISOString(),
-    },
-  ]);
+  const { weightHistory, isLoading, createMutation, updateMutation, removeMutation } =
+    useWeightHistory(String(id));
 
   const latestWeightEntry = [...weightHistory].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -135,6 +160,8 @@ const ExerciseDetailScreen = () => {
   const [formDate, setFormDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
 
   const closeWeightModal = () => {
     setFormWeight("");
@@ -147,6 +174,7 @@ const ExerciseDetailScreen = () => {
   };
 
   const handleEditEntry = (entry: WeightHistoryEntry) => {
+    swipeableRefs.current.get(entry.id)?.close();
     setEditingEntryId(entry.id);
     setFormWeight(entry.weight.toString());
     setFormWeightUnit(entry.weightUnit);
@@ -161,12 +189,18 @@ const ExerciseDetailScreen = () => {
       "Eliminar registro",
       "¿Seguro que quieres eliminar esta entrada del historial?",
       [
-        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Cancelar",
+          style: "cancel",
+          onPress: () => swipeableRefs.current.get(entryId)?.close(),
+        },
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () =>
-            setWeightHistory((prev) => prev.filter((e) => e.id !== entryId)),
+          onPress: () => {
+            swipeableRefs.current.get(entryId)?.close();
+            setDeletingId(entryId);
+          },
         },
       ]
     );
@@ -205,29 +239,17 @@ const ExerciseDetailScreen = () => {
       return;
     }
 
+    const payload = {
+      weight: parsedWeight,
+      weightUnit: formWeightUnit,
+      note: formNote.trim() ? formNote.trim() : undefined,
+      date: formDate.toISOString(),
+    };
+
     if (editingEntryId) {
-      setWeightHistory((prev) =>
-        prev.map((e) =>
-          e.id === editingEntryId
-            ? {
-                ...e,
-                weight: parsedWeight,
-                weightUnit: formWeightUnit,
-                note: formNote.trim() ? formNote.trim() : undefined,
-                date: formDate.toISOString(),
-              }
-            : e
-        )
-      );
+      updateMutation.mutate({ entryId: editingEntryId, payload });
     } else {
-      const newEntry: WeightHistoryEntry = {
-        id: Date.now().toString(),
-        weight: parsedWeight,
-        weightUnit: formWeightUnit,
-        note: formNote.trim() ? formNote.trim() : undefined,
-        date: formDate.toISOString(),
-      };
-      setWeightHistory((prev) => [newEntry, ...prev]);
+      createMutation.mutate(payload);
     }
 
     closeWeightModal();
@@ -336,46 +358,69 @@ const ExerciseDetailScreen = () => {
           Historico de pesos
         </ThemedText>
 
-        {weightHistory.length === 0 ? (
+        {isLoading ? (
+          [0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[
+                styles.historyRowWrapper,
+                { borderColor, backgroundColor: borderColor, height: 56, borderRadius: 14 },
+              ]}
+            />
+          ))
+        ) : weightHistory.length === 0 ? (
           <ThemedText style={[styles.emptyHistory, { color: mutedText }]}>
             Sin registros de peso
           </ThemedText>
         ) : null}
 
-        {[...weightHistory]
+        {!isLoading && [...weightHistory]
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
           .map((entry) => (
-            <View key={entry.id} style={[styles.historyRowWrapper, { borderColor }]}>
-              <ReanimatedSwipeable
-                friction={2}
-                overshootRight={false}
-                renderRightActions={(_, drag) => (
-                  <SwipeRightActions
-                    drag={drag}
-                    onEdit={() => handleEditEntry(entry)}
-                    onDelete={() => handleDeleteEntry(entry.id)}
-                  />
-                )}
-              >
-                <View style={[styles.historyRow, { backgroundColor: cardBackground }]}>
-                  <View style={styles.historyRowTop}>
-                    <ThemedText style={styles.historyWeight}>
-                      {entry.weight} {entry.weightUnit}
-                    </ThemedText>
-                    <ThemedText style={[styles.historyDate, { color: mutedText }]}>
-                      {new Date(entry.date).toLocaleDateString()}
-                    </ThemedText>
+            <AnimatedHistoryRow
+              key={entry.id}
+              isDeleting={deletingId === entry.id}
+              onRemoveComplete={() => {
+                removeMutation.mutate({ entryId: entry.id });
+                setDeletingId(null);
+              }}
+            >
+              <View style={[styles.historyRowWrapper, { borderColor }]}>
+                <ReanimatedSwipeable
+                  ref={(el) => {
+                    if (el) swipeableRefs.current.set(entry.id, el);
+                    else swipeableRefs.current.delete(entry.id);
+                  }}
+                  friction={2}
+                  overshootRight={false}
+                  renderRightActions={(_, drag) => (
+                    <SwipeRightActions
+                      drag={drag}
+                      onEdit={() => handleEditEntry(entry)}
+                      onDelete={() => handleDeleteEntry(entry.id)}
+                    />
+                  )}
+                >
+                  <View style={[styles.historyRow, { backgroundColor: cardBackground }]}>
+                    <View style={styles.historyRowTop}>
+                      <ThemedText style={styles.historyWeight}>
+                        {entry.weight} {entry.weightUnit}
+                      </ThemedText>
+                      <ThemedText style={[styles.historyDate, { color: mutedText }]}>
+                        {new Date(entry.date).toLocaleDateString()}
+                      </ThemedText>
+                    </View>
+                    {entry.note ? (
+                      <ThemedText style={[styles.historyNote, { color: mutedText }]}>
+                        {entry.note}
+                      </ThemedText>
+                    ) : null}
                   </View>
-                  {entry.note ? (
-                    <ThemedText style={[styles.historyNote, { color: mutedText }]}>
-                      {entry.note}
-                    </ThemedText>
-                  ) : null}
-                </View>
-              </ReanimatedSwipeable>
-            </View>
+                </ReanimatedSwipeable>
+              </View>
+            </AnimatedHistoryRow>
           ))}
 
         <Pressable
