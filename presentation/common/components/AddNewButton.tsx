@@ -11,8 +11,13 @@ interface props {
 const AddNewButton = ({ onPressAction }: props) => {
   const primaryColor = useThemeColor({}, "primary");
   return (
-    <Pressable style={{ marginRight: 8 }} onPress={onPressAction}>
-      <Ionicons name="add" size={24} color={primaryColor} />
+    <Pressable hitSlop={12} onPress={onPressAction}>
+      <Ionicons
+        name="add"
+        size={24}
+        color={primaryColor}
+        style={{ transform: [{ translateX: 6 }] }}
+      />
     </Pressable>
   );
 };

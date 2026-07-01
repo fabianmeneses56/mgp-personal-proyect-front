@@ -8,8 +8,13 @@ const LogoutIconButton = () => {
   const { logout } = useAuthStore();
 
   return (
-    <Pressable style={{ marginRight: 8 }} onPress={logout}>
-      <Ionicons name="log-out-outline" size={24} color={primaryColor} />
+    <Pressable hitSlop={12} onPress={logout}>
+      <Ionicons
+        name="log-out-outline"
+        size={24}
+        color={primaryColor}
+        style={{ transform: [{ translateX: 6 }] }}
+      />
     </Pressable>
   );
 };
