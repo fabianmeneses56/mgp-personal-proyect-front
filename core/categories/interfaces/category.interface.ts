@@ -11,4 +11,5 @@ export interface Exercise {
   weight?: number;
   weightUnit?: string;
   category?: string;
+  imageUrl?: string;
 }

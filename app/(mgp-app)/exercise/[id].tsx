@@ -1,12 +1,17 @@
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
+import { updateExerciseImage } from "@/core/exercises/actions/update-exercise-image.action";
+import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
 import { Colors } from "@/constants/theme";
+import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
 import RegisterWeightModal from "@/presentation/exercises/components/RegisterWeightModal";
+import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Ionicons } from "@expo/vector-icons";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { Image } from "expo-image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -103,7 +108,7 @@ function AnimatedHistoryRow({
 }
 
 const ExerciseDetailScreen = () => {
-  const { id, name, weightGrams, weight, weightUnit, categoryName } =
+  const { id, name, weightGrams, weight, weightUnit, categoryName, imageUrl } =
     useLocalSearchParams<{
     id: string;
     name?: string;
@@ -111,6 +116,7 @@ const ExerciseDetailScreen = () => {
     weight?: string;
     weightUnit?: string;
     categoryName?: string;
+    imageUrl?: string;
     }>();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -162,6 +168,16 @@ const ExerciseDetailScreen = () => {
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
+    imageUrl || undefined
+  );
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const { pickImage } = usePickExerciseImage();
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [currentImageUrl]);
 
   const closeWeightModal = () => {
     setFormWeight("");
@@ -270,6 +286,25 @@ const ExerciseDetailScreen = () => {
     },
   });
 
+  const updateImageMutation = useMutation({
+    mutationFn: ({ exerciseId, image }: { exerciseId: string; image: PickedExerciseImage }) =>
+      updateExerciseImage(exerciseId, image),
+    onSuccess(data) {
+      setCurrentImageUrl(data.imageUrl);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError(error) {
+      Alert.alert("Error", error.message);
+    },
+  });
+
+  const handleChangeImage = async () => {
+    const image = await pickImage();
+    if (image) {
+      updateImageMutation.mutate({ exerciseId: String(id), image });
+    }
+  };
+
   const confirmDeleteExercise = useCallback(() => {
     Alert.alert(
       "Eliminar ejercicio",
@@ -323,6 +358,38 @@ const ExerciseDetailScreen = () => {
         <View style={styles.heroBadge}>
           <ThemedText style={styles.heroBadgeText}>Detalle</ThemedText>
         </View>
+
+        {currentImageUrl && !imageLoadFailed ? (
+          <Pressable
+            onPress={() => setImageViewerVisible(true)}
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <Image
+              source={{ uri: currentImageUrl }}
+              style={[styles.heroImage, { borderColor }]}
+              contentFit="cover"
+              onError={() => setImageLoadFailed(true)}
+            />
+          </Pressable>
+        ) : (
+          <View style={[styles.heroImagePlaceholder, { borderColor }]}>
+            <Ionicons name="image-outline" size={36} color={mutedText} />
+          </View>
+        )}
+
+        <Pressable
+          onPress={handleChangeImage}
+          disabled={updateImageMutation.isPending}
+          style={({ pressed }) => [
+            styles.changeImageButton,
+            { borderColor, opacity: pressed || updateImageMutation.isPending ? 0.7 : 1 },
+          ]}
+        >
+          <Ionicons name="camera-outline" size={16} color={Colors.light.primary} />
+          <Text style={[styles.changeImageButtonText, { color: Colors.light.primary }]}>
+            {updateImageMutation.isPending ? "Actualizando..." : "Cambiar imagen"}
+          </Text>
+        </Pressable>
 
         <ThemedText type="title" style={styles.title}>
           {name ?? "Ejercicio"}
@@ -490,6 +557,14 @@ const ExerciseDetailScreen = () => {
         borderColor={borderColor}
         mutedText={mutedText}
       />
+
+      {currentImageUrl ? (
+        <FullscreenImageModal
+          visible={imageViewerVisible}
+          imageUrl={currentImageUrl}
+          onClose={() => setImageViewerVisible(false)}
+        />
+      ) : null}
     </ScrollView>
   );
 };
@@ -523,6 +598,39 @@ const styles = StyleSheet.create({
   },
   heroBadgeText: {
     color: Colors.light.primary,
+    fontWeight: "700",
+  },
+  heroImage: {
+    width: "100%",
+    height: 180,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 14,
+  },
+  heroImagePlaceholder: {
+    width: "100%",
+    height: 180,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  changeImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
+  changeImageButtonText: {
+    fontSize: 14,
     fontWeight: "700",
   },
   title: {

@@ -2,17 +2,20 @@ import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { deleteCategory } from "@/core/categories/actions/delete-category.action";
 import { createExercise } from "@/core/exercises/actions/create-exercise.action";
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
+import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
 import { Colors } from "@/constants/theme";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
+import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -86,6 +89,15 @@ const CategoryScreen = () => {
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseWeight, setExerciseWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("kg");
+  const [selectedImage, setSelectedImage] = useState<PickedExerciseImage | null>(
+    null
+  );
+  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
+  const { pickImage } = usePickExerciseImage();
+
+  useEffect(() => {
+    setImagePreviewFailed(false);
+  }, [selectedImage]);
 
   const getExerciseWeightLabel = (exercise: Exercise) => {
     if (exercise.weight !== undefined) {
@@ -106,6 +118,7 @@ const CategoryScreen = () => {
       setExerciseName("");
       setExerciseWeight("");
       setWeightUnit("kg");
+      setSelectedImage(null);
       setModalVisible(false);
       Alert.alert("Ejercicio guardado", `${data.name} se creo correctamente`);
     },
@@ -227,7 +240,15 @@ const CategoryScreen = () => {
       weight: parsedWeight,
       weightUnit: weightUnit.trim() || "kg",
       category: String(id),
+      image: selectedImage ?? undefined,
     });
+  };
+
+  const handlePickImage = async () => {
+    const image = await pickImage();
+    if (image) {
+      setSelectedImage(image);
+    }
   };
 
   const closeModal = () => {
@@ -235,6 +256,7 @@ const CategoryScreen = () => {
     setExerciseName("");
     setExerciseWeight("");
     setWeightUnit("kg");
+    setSelectedImage(null);
   };
 
   const renderExerciseCard: ListRenderItem<Exercise> = ({ item, index }) => (
@@ -249,6 +271,7 @@ const CategoryScreen = () => {
             weight: String(item.weight ?? ""),
             weightUnit: String(item.weightUnit ?? ""),
             categoryName: String(name ?? "Categoria"),
+            imageUrl: String(item.imageUrl ?? ""),
           },
         })
       }
@@ -421,6 +444,41 @@ const CategoryScreen = () => {
               onChangeText={setWeightUnit}
               autoCapitalize="none"
             />
+
+            {selectedImage ? (
+              <View style={styles.imagePreviewRow}>
+                {imagePreviewFailed ? (
+                  <View style={[styles.imagePreview, styles.imagePreviewFallback, { borderColor }]}>
+                    <Ionicons name="image-outline" size={20} color={mutedText} />
+                  </View>
+                ) : (
+                  <Image
+                    source={{ uri: selectedImage.uri }}
+                    style={[styles.imagePreview, { borderColor }]}
+                    contentFit="cover"
+                    onError={() => setImagePreviewFailed(true)}
+                  />
+                )}
+                <Pressable
+                  style={styles.removeImageButton}
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <Text style={[styles.cancelButtonText, { color: mutedText }]}>
+                    Quitar
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.addImageButton, { borderColor }]}
+                onPress={handlePickImage}
+              >
+                <Ionicons name="image-outline" size={18} color={mutedText} />
+                <Text style={[styles.addImageButtonText, { color: mutedText }]}>
+                  Agregar imagen
+                </Text>
+              </Pressable>
+            )}
 
             <ThemedButton
               onPress={handleCreateExercise}
@@ -620,6 +678,42 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 15,
     fontWeight: "600",
+  },
+  addImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 16,
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  addImageButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  imagePreviewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 4,
+  },
+  imagePreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  imagePreviewFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderStyle: "dashed",
+  },
+  removeImageButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
 });
 
