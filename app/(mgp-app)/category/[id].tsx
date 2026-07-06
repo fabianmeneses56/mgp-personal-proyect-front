@@ -99,6 +99,15 @@ const CategoryScreen = () => {
     setImagePreviewFailed(false);
   }, [selectedImage]);
 
+  useEffect(() => {
+    const imageUrls = exercises
+      .map((exercise) => exercise.imageUrl)
+      .filter((url): url is string => !!url);
+    if (imageUrls.length > 0) {
+      Image.prefetch(imageUrls);
+    }
+  }, [exercises]);
+
   const getExerciseWeightLabel = (exercise: Exercise) => {
     if (exercise.weight !== undefined) {
       return `${exercise.weight} ${exercise.weightUnit ?? "kg"}`;
@@ -114,6 +123,9 @@ const CategoryScreen = () => {
   const exerciseMutation = useMutation({
     mutationFn: createExercise,
     onSuccess(data) {
+      if (data.imageUrl) {
+        Image.prefetch(data.imageUrl);
+      }
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setExerciseName("");
       setExerciseWeight("");

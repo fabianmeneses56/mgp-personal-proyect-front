@@ -290,6 +290,9 @@ const ExerciseDetailScreen = () => {
     mutationFn: ({ exerciseId, image }: { exerciseId: string; image: PickedExerciseImage }) =>
       updateExerciseImage(exerciseId, image),
     onSuccess(data) {
+      if (data.imageUrl) {
+        Image.prefetch(data.imageUrl);
+      }
       setCurrentImageUrl(data.imageUrl);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
@@ -368,6 +371,7 @@ const ExerciseDetailScreen = () => {
               source={{ uri: currentImageUrl }}
               style={[styles.heroImage, { borderColor }]}
               contentFit="cover"
+              transition={200}
               onError={() => setImageLoadFailed(true)}
             />
           </Pressable>

@@ -30,6 +30,7 @@ const FullscreenImageModal = ({
           source={{ uri: imageUrl }}
           style={styles.image}
           contentFit="contain"
+          transition={200}
         />
         <Pressable
           onPress={onClose}
