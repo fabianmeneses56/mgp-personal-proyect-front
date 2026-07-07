@@ -1,4 +1,14 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__agent-device__click",
+      "mcp__agent-device__screenshot",
+      "mcp__agent-device__open"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "agent-device"
+  ],
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "context7@claude-plugins-official": true
