@@ -16,11 +16,15 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import * as Haptics from "expo-haptics";
 import {
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -85,6 +89,7 @@ const CategoryScreen = () => {
     )?.exercise;
     return fromQuery ?? initialExercises;
   }, [categoriesQuery.data, id, initialExercises]);
+  const hasExercises = exercises.length > 0;
   const [modalVisible, setModalVisible] = useState(false);
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseWeight, setExerciseWeight] = useState("");
@@ -214,10 +219,18 @@ const CategoryScreen = () => {
         <View style={styles.headerActions}>
           <Pressable
             onPress={confirmDeleteCategory}
-            disabled={deleteCategoryMutation.isPending}
+            disabled={deleteCategoryMutation.isPending || hasExercises}
+            hitSlop={10}
             style={({ pressed }) => [
               styles.deleteHeaderButton,
-              { opacity: pressed || deleteCategoryMutation.isPending ? 0.75 : 1 },
+              {
+                opacity:
+                  hasExercises
+                    ? 0.4
+                    : pressed || deleteCategoryMutation.isPending
+                    ? 0.75
+                    : 1,
+              },
             ]}
           >
             <Ionicons name="trash-outline" size={22} color={dangerText} />
@@ -229,6 +242,7 @@ const CategoryScreen = () => {
   }, [
     confirmDeleteCategory,
     deleteCategoryMutation.isPending,
+    hasExercises,
     dangerText,
     name,
     navigation,
@@ -273,7 +287,8 @@ const CategoryScreen = () => {
 
   const renderExerciseCard: ListRenderItem<Exercise> = ({ item, index }) => (
     <Pressable
-      onPress={() =>
+      onPress={() => {
+        Haptics.selectionAsync();
         router.push({
           pathname: "/exercise/[id]",
           params: {
@@ -285,8 +300,8 @@ const CategoryScreen = () => {
             categoryName: String(name ?? "Categoria"),
             imageUrl: String(item.imageUrl ?? ""),
           },
-        })
-      }
+        });
+      }}
       style={({ pressed }) => [
         styles.card,
         {
@@ -311,6 +326,7 @@ const CategoryScreen = () => {
           <Pressable
             onPress={() => confirmDeleteExercise(item)}
             disabled={deleteExerciseMutation.isPending}
+            hitSlop={8}
             style={({ pressed }) => [
               styles.deleteExerciseIconButton,
               { opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1 },
@@ -361,6 +377,13 @@ const CategoryScreen = () => {
           styles.listContent,
           exercises.length === 0 && styles.emptyListContent,
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching}
+            onRefresh={() => categoriesQuery.refetch()}
+            tintColor={Colors.light.primary}
+          />
+        }
         ListFooterComponent={
           <View
             style={[
@@ -375,17 +398,22 @@ const CategoryScreen = () => {
               </ThemedText>
             </View>
             <ThemedText style={[styles.dangerZoneDescription, { color: mutedText }]}>
-              Si ya no necesitas esta categoria, puedes eliminarla desde aqui.
+              {hasExercises
+                ? "Elimina primero todos los ejercicios de esta categoria para poder eliminarla."
+                : "Si ya no necesitas esta categoria, puedes eliminarla desde aqui."}
             </ThemedText>
             <Pressable
               onPress={confirmDeleteCategory}
-              disabled={deleteCategoryMutation.isPending}
+              disabled={deleteCategoryMutation.isPending || hasExercises}
               style={({ pressed }) => [
                 styles.deleteCategoryButton,
                 {
                   backgroundColor: dangerText,
-                  opacity:
-                    pressed || deleteCategoryMutation.isPending ? 0.82 : 1,
+                  opacity: hasExercises
+                    ? 0.4
+                    : pressed || deleteCategoryMutation.isPending
+                    ? 0.82
+                    : 1,
                 },
               ]}
             >
@@ -422,7 +450,10 @@ const CategoryScreen = () => {
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <View
             style={[
               styles.modalCard,
@@ -441,6 +472,7 @@ const CategoryScreen = () => {
               value={exerciseName}
               onChangeText={setExerciseName}
               autoCapitalize="words"
+              autoFocus
             />
 
             <ThemedTextInput
@@ -505,7 +537,7 @@ const CategoryScreen = () => {
               </Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

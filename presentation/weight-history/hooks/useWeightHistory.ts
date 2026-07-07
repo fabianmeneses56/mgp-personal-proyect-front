@@ -9,7 +9,7 @@ import { Alert } from "react-native";
 export const useWeightHistory = (exerciseId: string) => {
   const queryClient = useQueryClient();
 
-  const { data: weightHistory = [], isLoading } = useQuery({
+  const { data: weightHistory = [], isLoading, isRefetching, refetch } = useQuery({
     queryKey: ["weight-history", exerciseId],
     queryFn: () => getWeightHistory(exerciseId),
     select: (entries) =>
@@ -46,5 +46,5 @@ export const useWeightHistory = (exerciseId: string) => {
     onError: (error: Error) => Alert.alert("Error", error.message),
   });
 
-  return { weightHistory, isLoading, createMutation, updateMutation, removeMutation };
+  return { weightHistory, isLoading, isRefetching, refetch, createMutation, updateMutation, removeMutation };
 };

@@ -3,12 +3,16 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 
 import { Colors } from "@/constants/theme";
 import { useCategory } from "@/presentation/categories/hooks/useCategory";
@@ -107,6 +111,13 @@ const HomeScreen = () => {
         keyExtractor={(category) => category.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching}
+            onRefresh={() => categoriesQuery.refetch()}
+            tintColor={Colors.light.primary}
+          />
+        }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
             <View
@@ -171,7 +182,8 @@ const HomeScreen = () => {
         }
         renderItem={({ item, index }) => (
           <Pressable
-            onPress={() =>
+            onPress={() => {
+              Haptics.selectionAsync();
               router.push({
                 pathname: "/category/[id]",
                 params: {
@@ -179,8 +191,8 @@ const HomeScreen = () => {
                   name: item.name,
                   data: JSON.stringify(item.exercise),
                 },
-              })
-            }
+              });
+            }}
             style={({ pressed }) => [
               styles.categoryCard,
               {
@@ -211,18 +223,12 @@ const HomeScreen = () => {
             </ThemedText>
 
             <View style={styles.cardFooter}>
-              <View>
-                <ThemedText style={[styles.footerLabel, { color: mutedText }]}>
-                  Ejercicios
-                </ThemedText>
-                <ThemedText type="defaultSemiBold" style={styles.footerValue}>
-                  {item.exercise.length}
-                </ThemedText>
-              </View>
-
-              <View style={styles.footerPill}>
-                <Text style={styles.footerPillText}>Abrir</Text>
-              </View>
+              <ThemedText style={[styles.footerLabel, { color: mutedText }]}>
+                Ejercicios
+              </ThemedText>
+              <ThemedText type="defaultSemiBold" style={styles.footerValue}>
+                {item.exercise.length}
+              </ThemedText>
             </View>
           </Pressable>
         )}
@@ -250,7 +256,10 @@ const HomeScreen = () => {
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <View
             style={[
               styles.modalCard,
@@ -267,6 +276,7 @@ const HomeScreen = () => {
             <ThemedTextInput
               placeholder="Nombre de la categoria"
               autoCapitalize="words"
+              autoFocus
               value={formValue}
               onChangeText={setFormValue}
             />
@@ -284,7 +294,7 @@ const HomeScreen = () => {
               </Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -435,8 +445,8 @@ const styles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "baseline",
+    gap: 6,
   },
   footerLabel: {
     fontSize: 13,
@@ -445,16 +455,6 @@ const styles = StyleSheet.create({
   },
   footerValue: {
     fontSize: 18,
-  },
-  footerPill: {
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  footerPillText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
   },
   emptyState: {
     borderWidth: 1,

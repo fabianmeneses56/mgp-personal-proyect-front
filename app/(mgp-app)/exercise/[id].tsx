@@ -15,9 +15,10 @@ import { Image } from "expo-image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import * as Haptics from "expo-haptics";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Alert, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 const SWIPE_ACTIONS_WIDTH = 136;
 
@@ -149,7 +150,7 @@ const ExerciseDetailScreen = () => {
     "background"
   );
 
-  const { weightHistory, isLoading, createMutation, updateMutation, removeMutation } =
+  const { weightHistory, isLoading, isRefetching, refetch, createMutation, updateMutation, removeMutation } =
     useWeightHistory(String(id));
 
   const latestWeightEntry = [...weightHistory].sort(
@@ -268,6 +269,7 @@ const ExerciseDetailScreen = () => {
       createMutation.mutate(payload);
     }
 
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     closeWeightModal();
   };
 
@@ -333,6 +335,7 @@ const ExerciseDetailScreen = () => {
         <Pressable
           onPress={confirmDeleteExercise}
           disabled={deleteExerciseMutation.isPending}
+          hitSlop={10}
           style={({ pressed }) => [
             styles.deleteHeaderButton,
             { opacity: pressed || deleteExerciseMutation.isPending ? 0.75 : 1 },
@@ -351,7 +354,18 @@ const ExerciseDetailScreen = () => {
   ]);
 
   return (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => refetch()}
+          tintColor={Colors.light.primary}
+        />
+      }
+    >
       <View
         style={[
           styles.heroCard,

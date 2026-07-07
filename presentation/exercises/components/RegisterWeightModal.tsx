@@ -8,6 +8,7 @@ import DateTimePicker, {
 import React from "react";
 import {
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -67,25 +68,30 @@ const RegisterWeightModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback>
-            <View
-              style={[
-                styles.modalCard,
-                { backgroundColor: modalBackground, borderColor },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.modalTitle}>
-                {title}
-              </ThemedText>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlayInner}>
+            <TouchableWithoutFeedback>
+              <View
+                style={[
+                  styles.modalCard,
+                  { backgroundColor: modalBackground, borderColor },
+                ]}
+              >
+                <ThemedText type="subtitle" style={styles.modalTitle}>
+                  {title}
+                </ThemedText>
 
-              <ThemedTextInput
-                placeholder="Peso"
-                keyboardType="numeric"
-                value={weight}
-                onChangeText={onChangeWeight}
-              />
+                <ThemedTextInput
+                  placeholder="Peso"
+                  keyboardType="numeric"
+                  value={weight}
+                  onChangeText={onChangeWeight}
+                  autoFocus
+                />
 
               <View style={styles.unitRow}>
                 {WEIGHT_UNITS.map((unit) => (
@@ -165,6 +171,7 @@ const RegisterWeightModal = ({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -172,9 +179,12 @@ const RegisterWeightModal = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+  },
+  modalOverlayInner: {
+    flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
   },
   modalCard: {
     borderWidth: 1,

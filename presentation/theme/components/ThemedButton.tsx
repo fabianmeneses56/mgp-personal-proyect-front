@@ -7,25 +7,27 @@ interface Props extends PressableProps {
   icon?: keyof typeof Ionicons.glyphMap;
 }
 
-const ThemedButton = ({ children, icon, ...rest }: Props) => {
+const ThemedButton = ({ children, icon, disabled, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, "primary");
 
   return (
     <Pressable
+      disabled={disabled}
       style={({ pressed }) => [
         {
-          backgroundColor: pressed ? primaryColor + "90" : primaryColor,
+          backgroundColor: primaryColor,
+          opacity: disabled ? 0.55 : pressed ? 0.85 : 1,
         },
         styles.button,
       ]}
       {...rest}
     >
-      <Text style={{ color: "white" }}>{children}</Text>
+      <Text style={styles.text}>{children}</Text>
 
       {icon && (
         <Ionicons
           name={icon}
-          size={24}
+          size={20}
           color="white"
           style={{ marginHorizontal: 5 }}
         />
@@ -37,11 +39,17 @@ export default ThemedButton;
 
 const styles = StyleSheet.create({
   button: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
     paddingVertical: 15,
-    borderRadius: 5,
+    minHeight: 50,
+    borderRadius: 16,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
+  },
+  text: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

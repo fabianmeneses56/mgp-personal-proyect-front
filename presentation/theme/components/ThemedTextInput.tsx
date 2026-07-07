@@ -18,6 +18,14 @@ interface Props extends TextInputProps {
 const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, "primary");
   const textColor = useThemeColor({}, "text");
+  const borderColor = useThemeColor(
+    { light: "#DCE5FF", dark: "#33415C" },
+    "background"
+  );
+  const placeholderColor = useThemeColor(
+    { light: "#667085", dark: "#98A2B3" },
+    "text"
+  );
 
   const [isActive, setIsActive] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -27,7 +35,7 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
       style={[
         {
           ...styles.border,
-          borderColor: isActive ? primaryColor : "#ccc",
+          borderColor: isActive ? primaryColor : borderColor,
         },
         style as StyleProp<ViewStyle>,
       ]}
@@ -44,7 +52,7 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
 
       <TextInput
         ref={inputRef}
-        placeholderTextColor="#5c5c5c"
+        placeholderTextColor={placeholderColor}
         onFocus={() => setIsActive(true)}
         onBlur={() => setIsActive(false)}
         style={{
@@ -62,8 +70,8 @@ export default ThemedTextInput;
 const styles = StyleSheet.create({
   border: {
     borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
+    borderRadius: 14,
+    padding: 12,
     marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
