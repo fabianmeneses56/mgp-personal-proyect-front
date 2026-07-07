@@ -1,3 +1,4 @@
+import { FontsToLoad } from "@/presentation/theme/fonts";
 import { useColorScheme } from "@/presentation/theme/hooks/use-color-scheme.web";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import {
@@ -6,10 +7,15 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +28,18 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const backgroundColor = useThemeColor({}, "background");
+  const [fontsLoaded] = useFonts(FontsToLoad);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView
       style={{ backgroundColor: backgroundColor, flex: 1 }}

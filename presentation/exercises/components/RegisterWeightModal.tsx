@@ -1,22 +1,15 @@
+import BottomSheetModal from "@/presentation/theme/components/BottomSheetModal";
+import { Fonts } from "@/presentation/theme/fonts";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import React from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface RegisterWeightModalProps {
   visible: boolean;
@@ -34,9 +27,6 @@ interface RegisterWeightModalProps {
   onChangeDate: (event: DateTimePickerEvent, selectedDate?: Date) => void;
   onSubmit: () => void;
   onClose: () => void;
-  modalBackground: string;
-  borderColor: string;
-  mutedText: string;
 }
 
 const WEIGHT_UNITS = ["kg", "lb"];
@@ -57,187 +47,160 @@ const RegisterWeightModal = ({
   onChangeDate,
   onSubmit,
   onClose,
-  modalBackground,
-  borderColor,
-  mutedText,
 }: RegisterWeightModalProps) => {
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const primaryColor = useThemeColor({}, "primary");
+  const mutedText = useThemeColor({}, "textMuted");
+  const faintText = useThemeColor({}, "textFaint");
+  const textColor = useThemeColor({}, "text");
+
   return (
-    <Modal
-      animationType="slide"
-      transparent
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        style={styles.modalOverlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <ThemedText type="subtitle" style={styles.modalTitle}>
+        {title}
+      </ThemedText>
+
+      <ThemedTextInput
+        placeholder="Peso"
+        keyboardType="numeric"
+        value={weight}
+        onChangeText={onChangeWeight}
+        autoFocus
+      />
+
+      <View style={[styles.unitToggle, { backgroundColor: borderColor }]}>
+        {WEIGHT_UNITS.map((unit) => (
+          <Pressable
+            key={unit}
+            onPress={() => onChangeWeightUnit(unit)}
+            style={[
+              styles.unitOption,
+              weightUnit === unit && { backgroundColor: surfaceColor },
+            ]}
+          >
+            <Text
+              style={[
+                styles.unitOptionText,
+                { color: weightUnit === unit ? primaryColor : faintText },
+              ]}
+            >
+              {unit.toUpperCase()}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <ThemedTextInput
+        placeholder="Nota (opcional)"
+        value={note}
+        onChangeText={onChangeNote}
+      />
+
+      <Pressable
+        onPress={onPressDate}
+        style={[styles.dateField, { backgroundColor: surfaceColor, borderColor }]}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalOverlayInner}>
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  styles.modalCard,
-                  { backgroundColor: modalBackground, borderColor },
-                ]}
-              >
-                <ThemedText type="subtitle" style={styles.modalTitle}>
-                  {title}
-                </ThemedText>
-
-                <ThemedTextInput
-                  placeholder="Peso"
-                  keyboardType="numeric"
-                  value={weight}
-                  onChangeText={onChangeWeight}
-                  autoFocus
-                />
-
-              <View style={styles.unitRow}>
-                {WEIGHT_UNITS.map((unit) => (
-                  <Pressable
-                    key={unit}
-                    onPress={() => onChangeWeightUnit(unit)}
-                    style={[
-                      styles.unitOption,
-                      {
-                        borderColor,
-                        backgroundColor:
-                          weightUnit === unit
-                            ? Colors.light.primary
-                            : "transparent",
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.unitOptionText,
-                        { color: weightUnit === unit ? "#FFFFFF" : mutedText },
-                      ]}
-                    >
-                      {unit}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              <ThemedTextInput
-                placeholder="Nota (opcional)"
-                value={note}
-                onChangeText={onChangeNote}
-              />
-
-              <Pressable
-                onPress={onPressDate}
-                style={[styles.dateField, { borderColor }]}
-              >
-                <Text style={[styles.dateFieldLabel, { color: mutedText }]}>
-                  Fecha
-                </Text>
-                <Text style={styles.dateFieldValue}>
-                  {date.toLocaleDateString()}
-                </Text>
-              </Pressable>
-
-              {showDatePicker && Platform.OS === "ios" ? (
-                <View>
-                  <DateTimePicker
-                    value={date}
-                    mode="date"
-                    display="inline"
-                    onChange={onChangeDate}
-                  />
-                  <ThemedButton onPress={onPressDate}>Listo</ThemedButton>
-                </View>
-              ) : null}
-
-              {showDatePicker && Platform.OS === "android" ? (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display="default"
-                  onChange={onChangeDate}
-                />
-              ) : null}
-
-              <ThemedButton onPress={onSubmit}>{submitLabel}</ThemedButton>
-
-              <Pressable style={styles.cancelButton} onPress={onClose}>
-                <Text style={[styles.cancelText, { color: mutedText }]}>
-                  Cancelar
-                </Text>
-              </Pressable>
-            </View>
-          </TouchableWithoutFeedback>
+        <View>
+          <Text style={[styles.dateFieldLabel, { color: faintText }]}>Fecha</Text>
+          <Text style={[styles.dateFieldValue, { color: textColor }]}>
+            {date.toLocaleDateString()}
+          </Text>
         </View>
-      </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </Modal>
+        <Ionicons name="calendar-outline" size={20} color={faintText} />
+      </Pressable>
+
+      {showDatePicker && Platform.OS === "ios" ? (
+        <View>
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="inline"
+            onChange={onChangeDate}
+          />
+          <View style={styles.doneButtonWrapper}>
+            <ThemedButton onPress={onPressDate}>Listo</ThemedButton>
+          </View>
+        </View>
+      ) : null}
+
+      {showDatePicker && Platform.OS === "android" ? (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+        />
+      ) : null}
+
+      <View style={styles.submitButtonWrapper}>
+        <ThemedButton onPress={onSubmit}>{submitLabel}</ThemedButton>
+      </View>
+
+      <Pressable style={styles.cancelButton} onPress={onClose}>
+        <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+      </Pressable>
+    </BottomSheetModal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-  },
-  modalOverlayInner: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 28,
-    padding: 20,
-    gap: 12,
-  },
   modalTitle: {
-    marginBottom: 6,
+    marginBottom: 16,
   },
-  modalDescription: {
-    lineHeight: 22,
-    marginBottom: 6,
-  },
-  unitRow: {
+  unitToggle: {
     flexDirection: "row",
-    gap: 10,
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 11,
   },
   unitOption: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 10,
     alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 11,
   },
   unitOptionText: {
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontFamily: Fonts.extrabold,
+    fontSize: 14,
   },
   dateField: {
     borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 2,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   dateFieldLabel: {
-    fontSize: 12,
+    fontFamily: Fonts.bold,
+    fontSize: 10.5,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.7,
   },
   dateFieldValue: {
+    marginTop: 2,
+    fontFamily: Fonts.bold,
     fontSize: 15,
-    fontWeight: "700",
+  },
+  doneButtonWrapper: {
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  submitButtonWrapper: {
+    marginTop: 5,
   },
   cancelButton: {
-    marginTop: 4,
+    marginTop: 6,
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
+    marginBottom: 4,
   },
   cancelText: {
+    fontFamily: Fonts.semibold,
     fontSize: 15,
-    fontWeight: "600",
   },
 });
 

@@ -3,10 +3,11 @@ import { deleteCategory } from "@/core/categories/actions/delete-category.action
 import { createExercise } from "@/core/exercises/actions/create-exercise.action";
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
-import { Colors } from "@/constants/theme";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
+import BottomSheetModal from "@/presentation/theme/components/BottomSheetModal";
+import { Fonts } from "@/presentation/theme/fonts";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
@@ -20,9 +21,6 @@ import * as Haptics from "expo-haptics";
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -30,6 +28,8 @@ import {
   View,
   type ListRenderItem,
 } from "react-native";
+
+const WEIGHT_UNITS = ["kg", "lb"];
 
 const CategoryScreen = () => {
   const { id, data, name } = useLocalSearchParams<{
@@ -40,38 +40,18 @@ const CategoryScreen = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { categoriesQuery } = useCategories();
-  const cardBackground = useThemeColor(
-    { light: "#F7F8FC", dark: "#20242C" },
-    "background"
-  );
-  const accentBackground = useThemeColor(
-    { light: "#E8EEFF", dark: "#283552" },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: "#DCE5FF", dark: "#33415C" },
-    "background"
-  );
-  const mutedText = useThemeColor(
-    { light: "#667085", dark: "#98A2B3" },
-    "text"
-  );
-  const modalBackground = useThemeColor(
-    { light: "#FFFFFF", dark: "#151718" },
-    "background"
-  );
-  const dangerBackground = useThemeColor(
-    { light: "#FFF1F2", dark: "#3A1E23" },
-    "background"
-  );
-  const dangerBorder = useThemeColor(
-    { light: "#FBCDD2", dark: "#6E2933" },
-    "background"
-  );
-  const dangerText = useThemeColor(
-    { light: "#B42318", dark: "#FF8A80" },
-    "text"
-  );
+
+  const backgroundColor = useThemeColor({}, "background");
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const primaryColor = useThemeColor({}, "primary");
+  const primarySoft = useThemeColor({}, "primarySoft");
+  const mutedText = useThemeColor({}, "textMuted");
+  const faintText = useThemeColor({}, "textFaint");
+  const textColor = useThemeColor({}, "text");
+  const dangerBg = useThemeColor({}, "dangerBg");
+  const dangerBorder = useThemeColor({}, "dangerBorder");
+  const dangerText = useThemeColor({}, "danger");
 
   const initialExercises = useMemo<Exercise[]>(() => {
     if (!data) return [];
@@ -224,12 +204,11 @@ const CategoryScreen = () => {
             style={({ pressed }) => [
               styles.deleteHeaderButton,
               {
-                opacity:
-                  hasExercises
-                    ? 0.4
-                    : pressed || deleteCategoryMutation.isPending
-                    ? 0.75
-                    : 1,
+                opacity: hasExercises
+                  ? 0.4
+                  : pressed || deleteCategoryMutation.isPending
+                  ? 0.75
+                  : 1,
               },
             ]}
           >
@@ -241,9 +220,9 @@ const CategoryScreen = () => {
     });
   }, [
     confirmDeleteCategory,
+    dangerText,
     deleteCategoryMutation.isPending,
     hasExercises,
-    dangerText,
     name,
     navigation,
   ]);
@@ -305,61 +284,48 @@ const CategoryScreen = () => {
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: cardBackground,
+          backgroundColor: surfaceColor,
           borderColor,
-          transform: [{ scale: pressed ? 0.985 : 1 }],
-          opacity: pressed ? 0.92 : 1,
+          opacity: pressed ? 0.75 : 1,
         },
       ]}
     >
-      <View style={styles.cardHeader}>
-        <View
-          style={[
-            styles.badge,
-            { backgroundColor: accentBackground, borderColor: Colors.light.primary },
-          ]}
-        >
-          <ThemedText style={styles.badgeText}>{`${index + 1}`}</ThemedText>
-        </View>
+      <View style={[styles.badge, { backgroundColor, borderColor }]}>
+        <Text style={[styles.badgeText, { color: primaryColor }]}>{index + 1}</Text>
+      </View>
 
-        <View style={styles.cardHeaderActions}>
-          <Pressable
-            onPress={() => confirmDeleteExercise(item)}
-            disabled={deleteExerciseMutation.isPending}
-            hitSlop={8}
-            style={({ pressed }) => [
-              styles.deleteExerciseIconButton,
-              { opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1 },
-            ]}
-          >
-            <Ionicons name="trash-outline" size={18} color={dangerText} />
-          </Pressable>
-
-          <View style={styles.chevronContainer}>
-            <ThemedText style={[styles.chevron, { color: Colors.light.primary }]}>
-              ›
-            </ThemedText>
-          </View>
+      <View style={styles.cardInfo}>
+        <ThemedText type="defaultSemiBold" style={styles.exerciseName}>
+          {item.name}
+        </ThemedText>
+        <View style={styles.metaRow}>
+          <Text style={[styles.metaLabel, { color: faintText }]}>Peso</Text>
+          <Text style={[styles.metaValue, { color: textColor }]}>
+            {getExerciseWeightLabel(item)}
+          </Text>
         </View>
       </View>
 
-      <ThemedText type="subtitle" style={styles.exerciseName}>
-        {item.name}
-      </ThemedText>
+      <Pressable
+        onPress={() => confirmDeleteExercise(item)}
+        disabled={deleteExerciseMutation.isPending}
+        hitSlop={6}
+        style={({ pressed }) => [
+          styles.rowActionCircle,
+          { backgroundColor: dangerBg, opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1 },
+        ]}
+      >
+        <Ionicons name="trash-outline" size={15} color={dangerText} />
+      </Pressable>
 
-      <View style={styles.metaRow}>
-        <ThemedText style={[styles.metaLabel, { color: mutedText }]}>
-          Peso
-        </ThemedText>
-        <ThemedText type="defaultSemiBold" style={styles.metaValue}>
-          {getExerciseWeightLabel(item)}
-        </ThemedText>
+      <View style={[styles.rowActionCircle, { backgroundColor: primarySoft }]}>
+        <Ionicons name="chevron-forward" size={16} color={primaryColor} />
       </View>
     </Pressable>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>
           Ejercicios
@@ -381,21 +347,16 @@ const CategoryScreen = () => {
           <RefreshControl
             refreshing={categoriesQuery.isRefetching}
             onRefresh={() => categoriesQuery.refetch()}
-            tintColor={Colors.light.primary}
+            tintColor={primaryColor}
           />
         }
         ListFooterComponent={
-          <View
-            style={[
-              styles.dangerZone,
-              { backgroundColor: dangerBackground, borderColor: dangerBorder },
-            ]}
-          >
+          <View style={[styles.dangerZone, { backgroundColor: dangerBg, borderColor: dangerBorder }]}>
             <View style={styles.dangerZoneHeader}>
-              <Ionicons name="warning-outline" size={22} color={dangerText} />
-              <ThemedText style={[styles.dangerZoneTitle, { color: dangerText }]}>
+              <Ionicons name="warning-outline" size={20} color={dangerText} />
+              <Text style={[styles.dangerZoneTitle, { color: dangerText }]}>
                 Zona de peligro
-              </ThemedText>
+              </Text>
             </View>
             <ThemedText style={[styles.dangerZoneDescription, { color: mutedText }]}>
               {hasExercises
@@ -426,12 +387,7 @@ const CategoryScreen = () => {
           </View>
         }
         ListEmptyComponent={
-          <View
-            style={[
-              styles.emptyState,
-              { backgroundColor: cardBackground, borderColor },
-            ]}
-          >
+          <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
             <ThemedText type="subtitle" style={styles.emptyTitle}>
               No hay ejercicios en esta categoria
             </ThemedText>
@@ -444,101 +400,106 @@ const CategoryScreen = () => {
         showsVerticalScrollIndicator={false}
       />
 
-      <Modal
-        animationType="slide"
-        transparent
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <View
-            style={[
-              styles.modalCard,
-              { backgroundColor: modalBackground, borderColor },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.modalTitle}>
-              Nuevo ejercicio
-            </ThemedText>
-            <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
-              Agrega el nombre, el peso y la unidad para esta categoria.
-            </ThemedText>
+      <BottomSheetModal visible={modalVisible} onClose={closeModal}>
+        <ThemedText type="subtitle" style={styles.modalTitle}>
+          Nuevo ejercicio
+        </ThemedText>
+        <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
+          Agrega el nombre, el peso y la unidad para esta categoria.
+        </ThemedText>
 
-            <ThemedTextInput
-              placeholder="Nombre del ejercicio"
-              value={exerciseName}
-              onChangeText={setExerciseName}
-              autoCapitalize="words"
-              autoFocus
-            />
+        <ThemedTextInput
+          placeholder="Nombre del ejercicio"
+          value={exerciseName}
+          onChangeText={setExerciseName}
+          autoCapitalize="words"
+          autoFocus
+        />
 
-            <ThemedTextInput
-              placeholder="Peso"
-              value={exerciseWeight}
-              onChangeText={setExerciseWeight}
-              keyboardType="numeric"
-            />
+        <View style={styles.weightRow}>
+          <ThemedTextInput
+            placeholder="Peso"
+            value={exerciseWeight}
+            onChangeText={setExerciseWeight}
+            keyboardType="numeric"
+            style={styles.weightInput}
+          />
 
-            <ThemedTextInput
-              placeholder="Unidad de peso"
-              value={weightUnit}
-              onChangeText={setWeightUnit}
-              autoCapitalize="none"
-            />
-
-            {selectedImage ? (
-              <View style={styles.imagePreviewRow}>
-                {imagePreviewFailed ? (
-                  <View style={[styles.imagePreview, styles.imagePreviewFallback, { borderColor }]}>
-                    <Ionicons name="image-outline" size={20} color={mutedText} />
-                  </View>
-                ) : (
-                  <Image
-                    source={{ uri: selectedImage.uri }}
-                    style={[styles.imagePreview, { borderColor }]}
-                    contentFit="cover"
-                    onError={() => setImagePreviewFailed(true)}
-                  />
-                )}
-                <Pressable
-                  style={styles.removeImageButton}
-                  onPress={() => setSelectedImage(null)}
-                >
-                  <Text style={[styles.cancelButtonText, { color: mutedText }]}>
-                    Quitar
-                  </Text>
-                </Pressable>
-              </View>
-            ) : (
+          <View style={[styles.unitToggle, { backgroundColor: borderColor }]}>
+            {WEIGHT_UNITS.map((unit) => (
               <Pressable
-                style={[styles.addImageButton, { borderColor }]}
-                onPress={handlePickImage}
+                key={unit}
+                onPress={() => setWeightUnit(unit)}
+                style={[
+                  styles.unitOption,
+                  weightUnit === unit && { backgroundColor: surfaceColor },
+                ]}
               >
-                <Ionicons name="image-outline" size={18} color={mutedText} />
-                <Text style={[styles.addImageButtonText, { color: mutedText }]}>
-                  Agregar imagen
+                <Text
+                  style={[
+                    styles.unitOptionText,
+                    { color: weightUnit === unit ? primaryColor : faintText },
+                  ]}
+                >
+                  {unit}
                 </Text>
               </Pressable>
-            )}
-
-            <ThemedButton
-              onPress={handleCreateExercise}
-              disabled={exerciseMutation.isPending}
-            >
-              {exerciseMutation.isPending ? "Guardando..." : "Guardar ejercicio"}
-            </ThemedButton>
-
-            <Pressable style={styles.cancelButton} onPress={closeModal}>
-              <Text style={[styles.cancelButtonText, { color: mutedText }]}>
-                Cancelar
-              </Text>
-            </Pressable>
+            ))}
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </View>
+
+        {selectedImage ? (
+          <View style={styles.imagePreviewCard}>
+            {imagePreviewFailed ? (
+              <View style={[styles.imagePreview, styles.imagePreviewFallback, { borderColor }]}>
+                <Ionicons name="image-outline" size={22} color={mutedText} />
+              </View>
+            ) : (
+              <Image
+                source={{ uri: selectedImage.uri }}
+                style={styles.imagePreview}
+                contentFit="cover"
+                onError={() => setImagePreviewFailed(true)}
+              />
+            )}
+            <View style={styles.imagePreviewOverlay}>
+              <View style={styles.imageAddedBadge}>
+                <Ionicons name="checkmark" size={13} color="#FFFFFF" />
+                <Text style={styles.imageAddedText}>Imagen añadida</Text>
+              </View>
+              <Pressable style={styles.changeImageChip} onPress={handlePickImage}>
+                <Ionicons name="camera-outline" size={12} color={primaryColor} />
+                <Text style={[styles.changeImageChipText, { color: primaryColor }]}>
+                  Cambiar
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <Pressable
+            style={[styles.addImageButton, { borderColor: faintText }]}
+            onPress={handlePickImage}
+          >
+            <Ionicons name="image-outline" size={19} color={primaryColor} />
+            <Text style={[styles.addImageButtonText, { color: primaryColor }]}>
+              Agregar imagen
+            </Text>
+          </Pressable>
+        )}
+
+        <View style={styles.modalButtonWrapper}>
+          <ThemedButton
+            onPress={handleCreateExercise}
+            disabled={exerciseMutation.isPending}
+          >
+            {exerciseMutation.isPending ? "Guardando..." : "Guardar ejercicio"}
+          </ThemedButton>
+        </View>
+
+        <Pressable style={styles.cancelButton} onPress={closeModal}>
+          <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+        </Pressable>
+      </BottomSheetModal>
     </View>
   );
 };
@@ -549,17 +510,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header: {
-    paddingTop: 20,
-    paddingBottom: 12,
-    gap: 6,
+    paddingTop: 16,
+    paddingBottom: 10,
+    gap: 5,
   },
   title: {
-    fontSize: 30,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 30,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: Fonts.semibold,
   },
   headerActions: {
     flexDirection: "row",
@@ -570,90 +532,67 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   listContent: {
-    paddingTop: 8,
+    paddingTop: 6,
     paddingBottom: 28,
-    gap: 14,
+    gap: 11,
   },
   emptyListContent: {
     flexGrow: 1,
     justifyContent: "center",
   },
   card: {
-    borderWidth: 1,
-    borderRadius: 24,
-    padding: 18,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  cardHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 15,
   },
   badge: {
-    minWidth: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
+    fontSize: 15,
   },
-  cardHeaderActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  deleteExerciseIconButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(180, 35, 24, 0.08)",
-  },
-  chevronContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(61, 100, 244, 0.08)",
-  },
-  chevron: {
-    fontSize: 28,
-    lineHeight: 28,
-    marginTop: -2,
+  cardInfo: {
+    flex: 1,
   },
   exerciseName: {
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: 18,
+    fontSize: 17,
+    letterSpacing: -0.2,
   },
   metaRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 6,
+    marginTop: 3,
   },
   metaLabel: {
-    fontSize: 14,
+    fontFamily: Fonts.bold,
+    fontSize: 10.5,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   metaValue: {
-    fontSize: 18,
+    fontFamily: Fonts.extrabold,
+    fontSize: 14,
+  },
+  rowActionCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyState: {
     borderWidth: 1,
-    borderRadius: 28,
+    borderRadius: 26,
     paddingHorizontal: 24,
     paddingVertical: 28,
     alignItems: "center",
@@ -668,9 +607,9 @@ const styles = StyleSheet.create({
   },
   dangerZone: {
     borderWidth: 1,
-    borderRadius: 28,
+    borderRadius: 26,
     padding: 20,
-    marginTop: 18,
+    marginTop: 8,
     gap: 12,
   },
   dangerZoneHeader: {
@@ -679,11 +618,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dangerZoneTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontFamily: Fonts.extrabold,
+    fontSize: 16,
   },
   dangerZoneDescription: {
-    lineHeight: 22,
+    lineHeight: 21,
+    fontSize: 13.5,
   },
   deleteCategoryButton: {
     borderRadius: 16,
@@ -693,71 +633,118 @@ const styles = StyleSheet.create({
   },
   deleteCategoryButtonText: {
     color: "#FFFFFF",
+    fontFamily: Fonts.bold,
     fontSize: 15,
-    fontWeight: "700",
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 28,
-    padding: 20,
   },
   modalTitle: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   modalDescription: {
-    lineHeight: 22,
+    lineHeight: 21,
     marginBottom: 18,
+    fontSize: 14,
   },
-  cancelButton: {
-    marginTop: 14,
-    paddingVertical: 10,
+  weightRow: {
+    flexDirection: "row",
+    gap: 11,
+  },
+  weightInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  unitToggle: {
+    flexDirection: "row",
+    borderRadius: 14,
+    padding: 4,
+    height: 54,
     alignItems: "center",
   },
-  cancelButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
+  unitOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 11,
+  },
+  unitOptionText: {
+    fontFamily: Fonts.extrabold,
+    fontSize: 13,
   },
   addImageButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
+    gap: 9,
+    borderWidth: 1.5,
     borderStyle: "dashed",
     borderRadius: 16,
-    paddingVertical: 14,
-    marginTop: 4,
+    paddingVertical: 15,
+    marginTop: 11,
   },
   addImageButtonText: {
+    fontFamily: Fonts.bold,
     fontSize: 15,
-    fontWeight: "600",
   },
-  imagePreviewRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 4,
+  imagePreviewCard: {
+    marginTop: 11,
+    borderRadius: 16,
+    overflow: "hidden",
+    height: 130,
   },
   imagePreview: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    borderWidth: 1,
+    width: "100%",
+    height: "100%",
   },
   imagePreviewFallback: {
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
     borderStyle: "dashed",
   },
-  removeImageButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+  imagePreviewOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(12,13,17,0.5)",
+  },
+  imageAddedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  imageAddedText: {
+    color: "#FFFFFF",
+    fontFamily: Fonts.bold,
+    fontSize: 12,
+  },
+  changeImageChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
+  changeImageChipText: {
+    fontFamily: Fonts.extrabold,
+    fontSize: 12,
+  },
+  modalButtonWrapper: {
+    marginTop: 15,
+  },
+  cancelButton: {
+    marginTop: 6,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  cancelText: {
+    fontFamily: Fonts.semibold,
+    fontSize: 15,
   },
 });
 

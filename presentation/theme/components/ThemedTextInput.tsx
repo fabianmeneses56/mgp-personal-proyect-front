@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { useRef, useState } from "react";
+import { Fonts } from "../fonts";
 import { useThemeColor } from "../hooks/use-theme-color";
 
 interface Props extends TextInputProps {
@@ -18,14 +19,9 @@ interface Props extends TextInputProps {
 const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, "primary");
   const textColor = useThemeColor({}, "text");
-  const borderColor = useThemeColor(
-    { light: "#DCE5FF", dark: "#33415C" },
-    "background"
-  );
-  const placeholderColor = useThemeColor(
-    { light: "#667085", dark: "#98A2B3" },
-    "text"
-  );
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const placeholderColor = useThemeColor({}, "textFaint");
 
   const [isActive, setIsActive] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -33,9 +29,11 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
   return (
     <View
       style={[
+        styles.border,
         {
-          ...styles.border,
+          backgroundColor: surfaceColor,
           borderColor: isActive ? primaryColor : borderColor,
+          borderWidth: isActive ? 1.5 : 1,
         },
         style as StyleProp<ViewStyle>,
       ]}
@@ -44,9 +42,9 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
       {icon && (
         <Ionicons
           name={icon}
-          size={24}
-          color={textColor}
-          style={{ marginRight: 10 }}
+          size={20}
+          color={placeholderColor}
+          style={{ marginRight: 12 }}
         />
       )}
 
@@ -57,6 +55,8 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
         onBlur={() => setIsActive(false)}
         style={{
           color: textColor,
+          fontFamily: Fonts.semibold,
+          fontSize: 15.5,
           marginRight: 10,
           flex: 1,
         }}
@@ -69,10 +69,10 @@ export default ThemedTextInput;
 
 const styles = StyleSheet.create({
   border: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    marginBottom: 11,
     flexDirection: "row",
     alignItems: "center",
   },

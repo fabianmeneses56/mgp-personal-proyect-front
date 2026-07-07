@@ -3,21 +3,20 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
-import { Colors } from "@/constants/theme";
 import { useCategory } from "@/presentation/categories/hooks/useCategory";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
+import BottomSheetModal from "@/presentation/theme/components/BottomSheetModal";
+import { Fonts } from "@/presentation/theme/fonts";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
@@ -31,26 +30,14 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { productMutation } = useCategory("new");
 
-  const surfaceColor = useThemeColor(
-    { light: "#F7F8FC", dark: "#20242C" },
-    "background"
-  );
-  const heroColor = useThemeColor(
-    { light: "#E8EEFF", dark: "#283552" },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: "#DCE5FF", dark: "#33415C" },
-    "background"
-  );
-  const mutedText = useThemeColor(
-    { light: "#667085", dark: "#98A2B3" },
-    "text"
-  );
-  const modalBackground = useThemeColor(
-    { light: "#FFFFFF", dark: "#151718" },
-    "background"
-  );
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const backgroundColor = useThemeColor({}, "background");
+  const primaryColor = useThemeColor({}, "primary");
+  const textColor = useThemeColor({}, "text");
+  const primarySoft = useThemeColor({}, "primarySoft");
+  const mutedText = useThemeColor({}, "textMuted");
+  const faintText = useThemeColor({}, "textFaint");
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -83,14 +70,9 @@ const HomeScreen = () => {
 
   if (categoriesQuery.isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <View
-          style={[
-            styles.loadingCard,
-            { backgroundColor: surfaceColor, borderColor },
-          ]}
-        >
-          <ActivityIndicator size={32} color={Colors.light.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor }]}>
+        <View style={[styles.loadingCard, { backgroundColor: surfaceColor, borderColor }]}>
+          <ActivityIndicator size={32} color={primaryColor} />
           <ThemedText type="subtitle" style={styles.loadingTitle}>
             Cargando categorias
           </ThemedText>
@@ -105,7 +87,7 @@ const HomeScreen = () => {
   const categories = categoriesQuery.data ?? [];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       <FlatList
         data={categories}
         keyExtractor={(category) => category.id}
@@ -115,19 +97,14 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={categoriesQuery.isRefetching}
             onRefresh={() => categoriesQuery.refetch()}
-            tintColor={Colors.light.primary}
+            tintColor={primaryColor}
           />
         }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <View
-              style={[
-                styles.heroCard,
-                { backgroundColor: heroColor, borderColor },
-              ]}
-            >
-              <View style={styles.heroBadge}>
-                <ThemedText style={styles.heroBadgeText}>Rutina</ThemedText>
+            <View style={[styles.heroCard, { backgroundColor: surfaceColor, borderColor }]}>
+              <View style={[styles.heroBadge, { backgroundColor: primarySoft }]}>
+                <Text style={[styles.heroBadgeText, { color: primaryColor }]}>Rutina</Text>
               </View>
 
               <ThemedText type="title" style={styles.heroTitle}>
@@ -139,42 +116,28 @@ const HomeScreen = () => {
               </ThemedText>
 
               <View style={styles.statsRow}>
-                <View
-                  style={[
-                    styles.statCard,
-                    { backgroundColor: surfaceColor, borderColor },
-                  ]}
-                >
-                  <ThemedText style={[styles.statLabel, { color: mutedText }]}>
-                    Categorias
-                  </ThemedText>
-                  <ThemedText style={styles.statValue}>
+                <View style={[styles.statCard, { backgroundColor, borderColor }]}>
+                  <Text style={[styles.statLabel, { color: faintText }]}>Categorias</Text>
+                  <Text style={[styles.statValue, { color: textColor }]}>
                     {categories.length}
-                  </ThemedText>
+                  </Text>
                 </View>
 
-                <View
-                  style={[
-                    styles.statCard,
-                    { backgroundColor: surfaceColor, borderColor },
-                  ]}
-                >
-                  <ThemedText style={[styles.statLabel, { color: mutedText }]}>
-                    Ejercicios
-                  </ThemedText>
-                  <ThemedText style={styles.statValue}>
+                <View style={[styles.statCard, { backgroundColor, borderColor }]}>
+                  <Text style={[styles.statLabel, { color: faintText }]}>Ejercicios</Text>
+                  <Text style={[styles.statValue, { color: textColor }]}>
                     {categories.reduce(
                       (total, category) => total + category.exercise.length,
                       0
                     )}
-                  </ThemedText>
+                  </Text>
                 </View>
               </View>
             </View>
 
             <View style={styles.sectionHeader}>
               <ThemedText type="subtitle">Explora categorias</ThemedText>
-              <ThemedText style={[styles.sectionHint, { color: mutedText }]}>
+              <ThemedText style={[styles.sectionHint, { color: faintText }]}>
                 Toca una tarjeta para ver sus ejercicios.
               </ThemedText>
             </View>
@@ -198,47 +161,33 @@ const HomeScreen = () => {
               {
                 backgroundColor: surfaceColor,
                 borderColor,
-                transform: [{ scale: pressed ? 0.985 : 1 }],
-                opacity: pressed ? 0.94 : 1,
+                opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <View style={styles.cardTopRow}>
-              <View
-                style={[
-                  styles.indexBadge,
-                  { backgroundColor: heroColor, borderColor },
-                ]}
-              >
-                <ThemedText style={styles.indexBadgeText}>{index + 1}</ThemedText>
-              </View>
-
-              <View style={styles.arrowCircle}>
-                <ThemedText style={styles.arrowText}>›</ThemedText>
-              </View>
+            <View style={[styles.indexBadge, { backgroundColor, borderColor }]}>
+              <Text style={[styles.indexBadgeText, { color: primaryColor }]}>
+                {index + 1}
+              </Text>
             </View>
 
-            <ThemedText type="subtitle" style={styles.categoryName}>
-              {item.name}
-            </ThemedText>
+            <View style={styles.categoryInfo}>
+              <ThemedText type="defaultSemiBold" style={styles.categoryName}>
+                {item.name}
+              </ThemedText>
+              <Text style={[styles.categoryMeta, { color: faintText }]}>
+                {item.exercise.length}{" "}
+                {item.exercise.length === 1 ? "ejercicio" : "ejercicios"}
+              </Text>
+            </View>
 
-            <View style={styles.cardFooter}>
-              <ThemedText style={[styles.footerLabel, { color: mutedText }]}>
-                Ejercicios
-              </ThemedText>
-              <ThemedText type="defaultSemiBold" style={styles.footerValue}>
-                {item.exercise.length}
-              </ThemedText>
+            <View style={[styles.chevronCircle, { backgroundColor, borderColor }]}>
+              <Ionicons name="chevron-forward" size={16} color={faintText} />
             </View>
           </Pressable>
         )}
         ListEmptyComponent={
-          <View
-            style={[
-              styles.emptyState,
-              { backgroundColor: surfaceColor, borderColor },
-            ]}
-          >
+          <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
             <ThemedText type="subtitle" style={styles.emptyTitle}>
               Aun no hay categorias
             </ThemedText>
@@ -250,52 +199,33 @@ const HomeScreen = () => {
         }
       />
 
-      <Modal
-        animationType="slide"
-        transparent
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <View
-            style={[
-              styles.modalCard,
-              { backgroundColor: modalBackground, borderColor },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.modalTitle}>
-              Nueva categoria
-            </ThemedText>
-            <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
-              Dale un nombre claro para encontrar mas rapido tus ejercicios.
-            </ThemedText>
+      <BottomSheetModal visible={modalVisible} onClose={closeModal}>
+        <ThemedText type="subtitle" style={styles.modalTitle}>
+          Nueva categoria
+        </ThemedText>
+        <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
+          Dale un nombre claro para encontrar mas rapido tus ejercicios.
+        </ThemedText>
 
-            <ThemedTextInput
-              placeholder="Nombre de la categoria"
-              autoCapitalize="words"
-              autoFocus
-              value={formValue}
-              onChangeText={setFormValue}
-            />
+        <Text style={[styles.fieldLabel, { color: faintText }]}>Nombre</Text>
+        <ThemedTextInput
+          placeholder="Nombre de la categoria"
+          autoCapitalize="words"
+          autoFocus
+          value={formValue}
+          onChangeText={setFormValue}
+        />
 
-            <ThemedButton
-              onPress={handleSubmit}
-              disabled={productMutation.isPending}
-            >
-              {productMutation.isPending ? "Guardando..." : "Guardar categoria"}
-            </ThemedButton>
+        <View style={styles.modalButtonWrapper}>
+          <ThemedButton onPress={handleSubmit} disabled={productMutation.isPending}>
+            {productMutation.isPending ? "Guardando..." : "Guardar categoria"}
+          </ThemedButton>
+        </View>
 
-            <Pressable style={styles.cancelButton} onPress={closeModal}>
-              <Text style={[styles.cancelText, { color: mutedText }]}>
-                Cancelar
-              </Text>
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        <Pressable style={styles.cancelButton} onPress={closeModal}>
+          <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+        </Pressable>
+      </BottomSheetModal>
     </View>
   );
 };
@@ -314,7 +244,7 @@ const styles = StyleSheet.create({
   loadingCard: {
     width: "100%",
     borderWidth: 1,
-    borderRadius: 28,
+    borderRadius: 26,
     paddingVertical: 32,
     paddingHorizontal: 24,
     alignItems: "center",
@@ -327,45 +257,41 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   listContent: {
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 28,
-    gap: 14,
+    gap: 11,
   },
   headerBlock: {
-    gap: 18,
-    marginBottom: 6,
+    gap: 20,
+    marginBottom: 4,
   },
   heroCard: {
     borderWidth: 1,
-    borderRadius: 30,
-    padding: 22,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
+    borderRadius: 26,
+    padding: 24,
   },
   heroBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(61, 100, 244, 0.12)",
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginBottom: 16,
   },
   heroBadgeText: {
-    color: Colors.light.primary,
-    fontWeight: "700",
+    fontFamily: Fonts.bold,
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
   heroTitle: {
-    fontSize: 32,
-    lineHeight: 36,
-    marginBottom: 8,
+    fontSize: 28,
+    lineHeight: 32,
+    marginBottom: 9,
   },
   heroDescription: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 20,
+    maxWidth: 280,
   },
   statsRow: {
     flexDirection: "row",
@@ -374,91 +300,72 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 22,
-    padding: 16,
+    borderRadius: 18,
+    padding: 15,
   },
   statLabel: {
-    fontSize: 13,
+    fontFamily: Fonts.bold,
+    fontSize: 10.5,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 8,
+    letterSpacing: 1,
+    marginBottom: 6,
   },
   statValue: {
     fontSize: 28,
-    fontWeight: "700",
-    color: Colors.light.primary,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
   sectionHeader: {
-    gap: 4,
+    gap: 3,
   },
   sectionHint: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: Fonts.semibold,
   },
   categoryCard: {
-    borderWidth: 1,
-    borderRadius: 26,
-    padding: 18,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  cardTopRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 18,
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 15,
   },
   indexBadge: {
-    minWidth: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   indexBadgeText: {
-    color: Colors.light.primary,
+    fontWeight: "800",
     fontSize: 15,
-    fontWeight: "700",
   },
-  arrowCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(61, 100, 244, 0.08)",
-  },
-  arrowText: {
-    color: Colors.light.primary,
-    fontSize: 28,
-    lineHeight: 28,
-    marginTop: -2,
+  categoryInfo: {
+    flex: 1,
   },
   categoryName: {
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 20,
+    fontSize: 17,
+    letterSpacing: -0.2,
   },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 6,
+  categoryMeta: {
+    marginTop: 3,
+    fontSize: 12.5,
+    fontFamily: Fonts.semibold,
   },
-  footerLabel: {
-    fontSize: 13,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  footerValue: {
-    fontSize: 18,
+  chevronCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyState: {
     borderWidth: 1,
-    borderRadius: 28,
+    borderRadius: 26,
     paddingHorizontal: 24,
     paddingVertical: 30,
     alignItems: "center",
@@ -472,32 +379,33 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 28,
-    padding: 20,
-  },
   modalTitle: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   modalDescription: {
-    lineHeight: 22,
-    marginBottom: 18,
+    lineHeight: 21,
+    marginBottom: 20,
+    fontSize: 14,
+  },
+  fieldLabel: {
+    fontFamily: Fonts.bold,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  modalButtonWrapper: {
+    marginTop: 6,
   },
   cancelButton: {
-    marginTop: 14,
+    marginTop: 6,
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
+    marginBottom: 4,
   },
   cancelText: {
+    fontFamily: Fonts.semibold,
     fontSize: 15,
-    fontWeight: "600",
   },
 });
 

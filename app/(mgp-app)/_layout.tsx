@@ -4,12 +4,15 @@ import { ActivityIndicator, View } from "react-native";
 
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
+import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
 const CheckAuthenticationLayout = () => {
   const { status, checkStatus } = useAuthStore();
 
   const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
+  const primaryColor = useThemeColor({}, "primary");
 
   useEffect(() => {
     checkStatus();
@@ -23,9 +26,10 @@ const CheckAuthenticationLayout = () => {
           justifyContent: "center",
           alignItems: "center",
           marginBottom: 5,
+          backgroundColor,
         }}
       >
-        <ActivityIndicator />
+        <ActivityIndicator color={primaryColor} />
       </View>
     );
   }
@@ -42,6 +46,12 @@ const CheckAuthenticationLayout = () => {
           headerStyle: {
             backgroundColor: backgroundColor,
           },
+          headerTitleStyle: {
+            fontFamily: Fonts.extrabold,
+            fontSize: 17,
+            color: textColor,
+          },
+          headerTintColor: primaryColor,
           contentStyle: {
             backgroundColor: backgroundColor,
           },

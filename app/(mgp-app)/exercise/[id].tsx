@@ -1,33 +1,59 @@
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { updateExerciseImage } from "@/core/exercises/actions/update-exercise-image.action";
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
-import { Colors } from "@/constants/theme";
+import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
 import RegisterWeightModal from "@/presentation/exercises/components/RegisterWeightModal";
 import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
+import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
-import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Ionicons } from "@expo/vector-icons";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { Image } from "expo-image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { Alert, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 const SWIPE_ACTIONS_WIDTH = 136;
 
 function SwipeRightActions({
   drag,
+  primaryColor,
   onEdit,
   onDelete,
 }: {
   drag: SharedValue<number>;
+  primaryColor: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -38,7 +64,7 @@ function SwipeRightActions({
           drag.value,
           [-SWIPE_ACTIONS_WIDTH, 0],
           [0, SWIPE_ACTIONS_WIDTH],
-          Extrapolation.CLAMP
+          Extrapolation.CLAMP,
         ),
       },
     ],
@@ -47,7 +73,7 @@ function SwipeRightActions({
     <Animated.View style={[styles.swipeActions, animatedStyle]}>
       <Pressable
         onPress={onEdit}
-        style={[styles.swipeActionEdit, { backgroundColor: Colors.light.primary }]}
+        style={[styles.swipeActionEdit, { backgroundColor: primaryColor }]}
       >
         <Ionicons name="create-outline" size={18} color="#FFFFFF" />
         <Text style={styles.swipeActionText}>Editar</Text>
@@ -111,51 +137,43 @@ function AnimatedHistoryRow({
 const ExerciseDetailScreen = () => {
   const { id, name, weightGrams, weight, weightUnit, categoryName, imageUrl } =
     useLocalSearchParams<{
-    id: string;
-    name?: string;
-    weightGrams?: string;
-    weight?: string;
-    weightUnit?: string;
-    categoryName?: string;
-    imageUrl?: string;
+      id: string;
+      name?: string;
+      weightGrams?: string;
+      weight?: string;
+      weightUnit?: string;
+      categoryName?: string;
+      imageUrl?: string;
     }>();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const cardBackground = useThemeColor(
-    { light: "#F7F8FC", dark: "#20242C" },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: "#DCE5FF", dark: "#33415C" },
-    "background"
-  );
-  const mutedText = useThemeColor(
-    { light: "#667085", dark: "#98A2B3" },
-    "text"
-  );
-  const dangerBackground = useThemeColor(
-    { light: "#FFF1F2", dark: "#3A1E23" },
-    "background"
-  );
-  const dangerBorder = useThemeColor(
-    { light: "#FBCDD2", dark: "#6E2933" },
-    "background"
-  );
-  const dangerText = useThemeColor(
-    { light: "#B42318", dark: "#FF8A80" },
-    "text"
-  );
-  const modalBackground = useThemeColor(
-    { light: "#FFFFFF", dark: "#151718" },
-    "background"
-  );
 
-  const { weightHistory, isLoading, isRefetching, refetch, createMutation, updateMutation, removeMutation } =
-    useWeightHistory(String(id));
+  const backgroundColor = useThemeColor({}, "background");
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const textColor = useThemeColor({}, "text");
+  const faintText = useThemeColor({}, "textFaint");
+  const primaryColor = useThemeColor({}, "primary");
+  const primarySoft = useThemeColor({}, "primarySoft");
+  const mutedText = useThemeColor({}, "textMuted");
+  const dangerBg = useThemeColor({}, "dangerBg");
+  const dangerBorder = useThemeColor({}, "dangerBorder");
+  const dangerText = useThemeColor({}, "danger");
 
-  const latestWeightEntry = [...weightHistory].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )[0] ?? null;
+  const {
+    weightHistory,
+    isLoading,
+    isRefetching,
+    refetch,
+    createMutation,
+    updateMutation,
+    removeMutation,
+  } = useWeightHistory(String(id));
+
+  const latestWeightEntry =
+    [...weightHistory].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )[0] ?? null;
   const displayWeight = latestWeightEntry
     ? `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`
     : "Sin registros";
@@ -170,7 +188,7 @@ const ExerciseDetailScreen = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
-    imageUrl || undefined
+    imageUrl || undefined,
   );
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -219,7 +237,7 @@ const ExerciseDetailScreen = () => {
             setDeletingId(entryId);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -238,7 +256,7 @@ const ExerciseDetailScreen = () => {
 
   const handleChangeDate = (
     event: DateTimePickerEvent,
-    selectedDate?: Date
+    selectedDate?: Date,
   ) => {
     if (Platform.OS === "android") {
       setShowDatePicker(false);
@@ -280,7 +298,7 @@ const ExerciseDetailScreen = () => {
       router.back();
       Alert.alert(
         "Ejercicio eliminado",
-        `${String(name ?? "El ejercicio")} se elimino correctamente`
+        `${String(name ?? "El ejercicio")} se elimino correctamente`,
       );
     },
     onError(error) {
@@ -289,8 +307,13 @@ const ExerciseDetailScreen = () => {
   });
 
   const updateImageMutation = useMutation({
-    mutationFn: ({ exerciseId, image }: { exerciseId: string; image: PickedExerciseImage }) =>
-      updateExerciseImage(exerciseId, image),
+    mutationFn: ({
+      exerciseId,
+      image,
+    }: {
+      exerciseId: string;
+      image: PickedExerciseImage;
+    }) => updateExerciseImage(exerciseId, image),
     onSuccess(data) {
       if (data.imageUrl) {
         Image.prefetch(data.imageUrl);
@@ -324,7 +347,7 @@ const ExerciseDetailScreen = () => {
           style: "destructive",
           onPress: () => deleteExerciseMutation.mutate(String(id)),
         },
-      ]
+      ],
     );
   }, [deleteExerciseMutation, id, name]);
 
@@ -355,25 +378,27 @@ const ExerciseDetailScreen = () => {
 
   return (
     <ScrollView
-      style={styles.scrollView}
+      style={[styles.scrollView, { backgroundColor }]}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={() => refetch()}
-          tintColor={Colors.light.primary}
+          tintColor={primaryColor}
         />
       }
     >
       <View
         style={[
           styles.heroCard,
-          { backgroundColor: cardBackground, borderColor },
+          { backgroundColor: surfaceColor, borderColor },
         ]}
       >
-        <View style={styles.heroBadge}>
-          <ThemedText style={styles.heroBadgeText}>Detalle</ThemedText>
+        <View style={[styles.heroBadge, { backgroundColor: primarySoft }]}>
+          <Text style={[styles.heroBadgeText, { color: primaryColor }]}>
+            Detalle
+          </Text>
         </View>
 
         {currentImageUrl && !imageLoadFailed ? (
@@ -383,60 +408,77 @@ const ExerciseDetailScreen = () => {
           >
             <Image
               source={{ uri: currentImageUrl }}
-              style={[styles.heroImage, { borderColor }]}
+              style={styles.heroImage}
               contentFit="cover"
               transition={200}
               onError={() => setImageLoadFailed(true)}
             />
           </Pressable>
         ) : (
-          <View style={[styles.heroImagePlaceholder, { borderColor }]}>
-            <Ionicons name="image-outline" size={36} color={mutedText} />
+          <View
+            style={[styles.heroImagePlaceholder, { borderColor: faintText }]}
+          >
+            <Text
+              style={[styles.heroImagePlaceholderText, { color: faintText }]}
+            >
+              IMAGEN DEL EJERCICIO
+            </Text>
           </View>
         )}
 
-        <Pressable
-          onPress={handleChangeImage}
-          disabled={updateImageMutation.isPending}
-          style={({ pressed }) => [
-            styles.changeImageButton,
-            { borderColor, opacity: pressed || updateImageMutation.isPending ? 0.7 : 1 },
-          ]}
-        >
-          <Ionicons name="camera-outline" size={16} color={Colors.light.primary} />
-          <Text style={[styles.changeImageButtonText, { color: Colors.light.primary }]}>
-            {updateImageMutation.isPending ? "Actualizando..." : "Cambiar imagen"}
-          </Text>
-        </Pressable>
+        <View style={styles.changeImageWrapper}>
+          <Pressable
+            onPress={handleChangeImage}
+            disabled={updateImageMutation.isPending}
+            style={({ pressed }) => [
+              styles.changeImageButton,
+              {
+                backgroundColor: primarySoft,
+                opacity: pressed || updateImageMutation.isPending ? 0.7 : 1,
+              },
+            ]}
+          >
+            <Ionicons name="camera-outline" size={16} color={primaryColor} />
+            <Text
+              style={[styles.changeImageButtonText, { color: primaryColor }]}
+            >
+              {updateImageMutation.isPending
+                ? "Actualizando..."
+                : "Cambiar imagen"}
+            </Text>
+          </Pressable>
+        </View>
 
         <ThemedText type="title" style={styles.title}>
           {name ?? "Ejercicio"}
         </ThemedText>
 
-        <ThemedText style={[styles.subtitle, { color: mutedText }]}>
+        <Text style={[styles.subtitle, { color: mutedText }]}>
           Categoria: {categoryName ?? "Sin categoria"}
-        </ThemedText>
+        </Text>
       </View>
 
       <View
         style={[
           styles.metricCard,
-          { backgroundColor: cardBackground, borderColor },
+          { backgroundColor: surfaceColor, borderColor },
         ]}
       >
-        <ThemedText style={[styles.metricLabel, { color: mutedText }]}>
+        <Text style={[styles.metricLabel, { color: faintText }]}>
           Peso asignado
-        </ThemedText>
-        <ThemedText style={styles.metricValue}>{displayWeight}</ThemedText>
-        <ThemedText style={[styles.metricHint, { color: mutedText }]}>
+        </Text>
+        <Text style={[styles.metricValue, { color: primaryColor }]}>
+          {displayWeight}
+        </Text>
+        <Text style={[styles.metricHint, { color: mutedText }]}>
           Usa este valor para identificar rapidamente la carga del ejercicio.
-        </ThemedText>
+        </Text>
       </View>
 
       <View
         style={[
           styles.historyCard,
-          { backgroundColor: cardBackground, borderColor },
+          { backgroundColor: surfaceColor, borderColor },
         ]}
       >
         <ThemedText type="subtitle" style={styles.historyTitle}>
@@ -449,70 +491,83 @@ const ExerciseDetailScreen = () => {
               key={i}
               style={[
                 styles.historyRowWrapper,
-                { borderColor, backgroundColor: borderColor, height: 56, borderRadius: 14 },
+                {
+                  borderColor,
+                  backgroundColor: borderColor,
+                  height: 56,
+                  borderRadius: 14,
+                },
               ]}
             />
           ))
         ) : weightHistory.length === 0 ? (
-          <ThemedText style={[styles.emptyHistory, { color: mutedText }]}>
+          <Text style={[styles.emptyHistory, { color: faintText }]}>
             Sin registros de peso
-          </ThemedText>
+          </Text>
         ) : null}
 
-        {!isLoading && [...weightHistory]
-          .sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          .map((entry) => (
-            <AnimatedHistoryRow
-              key={entry.id}
-              isDeleting={deletingId === entry.id}
-              onRemoveComplete={() => {
-                removeMutation.mutate({ entryId: entry.id });
-                setDeletingId(null);
-              }}
-            >
-              <View style={[styles.historyRowWrapper, { borderColor }]}>
-                <ReanimatedSwipeable
-                  ref={(el) => {
-                    if (el) swipeableRefs.current.set(entry.id, el);
-                    else swipeableRefs.current.delete(entry.id);
-                  }}
-                  friction={2}
-                  overshootRight={false}
-                  renderRightActions={(_, drag) => (
-                    <SwipeRightActions
-                      drag={drag}
-                      onEdit={() => handleEditEntry(entry)}
-                      onDelete={() => handleDeleteEntry(entry.id)}
-                    />
-                  )}
-                >
-                  <View style={[styles.historyRow, { backgroundColor: cardBackground }]}>
-                    <View style={styles.historyRowTop}>
-                      <ThemedText style={styles.historyWeight}>
-                        {entry.weight} {entry.weightUnit}
-                      </ThemedText>
-                      <ThemedText style={[styles.historyDate, { color: mutedText }]}>
-                        {new Date(entry.date).toLocaleDateString()}
-                      </ThemedText>
+        {!isLoading &&
+          [...weightHistory]
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+            )
+            .map((entry) => (
+              <AnimatedHistoryRow
+                key={entry.id}
+                isDeleting={deletingId === entry.id}
+                onRemoveComplete={() => {
+                  removeMutation.mutate({ entryId: entry.id });
+                  setDeletingId(null);
+                }}
+              >
+                <View style={[styles.historyRowWrapper, { borderColor }]}>
+                  <ReanimatedSwipeable
+                    ref={(el) => {
+                      if (el) swipeableRefs.current.set(entry.id, el);
+                      else swipeableRefs.current.delete(entry.id);
+                    }}
+                    friction={2}
+                    overshootRight={false}
+                    renderRightActions={(_, drag) => (
+                      <SwipeRightActions
+                        drag={drag}
+                        primaryColor={primaryColor}
+                        onEdit={() => handleEditEntry(entry)}
+                        onDelete={() => handleDeleteEntry(entry.id)}
+                      />
+                    )}
+                  >
+                    <View style={[styles.historyRow, { backgroundColor }]}>
+                      <View style={styles.historyRowTop}>
+                        <Text
+                          style={[styles.historyWeight, { color: textColor }]}
+                        >
+                          {entry.weight} {entry.weightUnit}
+                        </Text>
+                        <Text
+                          style={[styles.historyDate, { color: faintText }]}
+                        >
+                          {new Date(entry.date).toLocaleDateString()}
+                        </Text>
+                      </View>
+                      {entry.note ? (
+                        <Text
+                          style={[styles.historyNote, { color: mutedText }]}
+                        >
+                          {entry.note}
+                        </Text>
+                      ) : null}
                     </View>
-                    {entry.note ? (
-                      <ThemedText style={[styles.historyNote, { color: mutedText }]}>
-                        {entry.note}
-                      </ThemedText>
-                    ) : null}
-                  </View>
-                </ReanimatedSwipeable>
-              </View>
-            </AnimatedHistoryRow>
-          ))}
+                  </ReanimatedSwipeable>
+                </View>
+              </AnimatedHistoryRow>
+            ))}
 
         <Pressable
           onPress={openCreateWeightModal}
           style={({ pressed }) => [
             styles.registerWeightButton,
-            { opacity: pressed ? 0.82 : 1 },
+            { backgroundColor: primaryColor, opacity: pressed ? 0.85 : 1 },
           ]}
         >
           <Text style={styles.registerWeightButtonText}>
@@ -524,18 +579,18 @@ const ExerciseDetailScreen = () => {
       <View
         style={[
           styles.dangerZone,
-          { backgroundColor: dangerBackground, borderColor: dangerBorder },
+          { backgroundColor: dangerBg, borderColor: dangerBorder },
         ]}
       >
         <View style={styles.dangerZoneHeader}>
-          <Ionicons name="warning-outline" size={22} color={dangerText} />
-          <ThemedText style={[styles.dangerZoneTitle, { color: dangerText }]}>
+          <Ionicons name="warning-outline" size={20} color={dangerText} />
+          <Text style={[styles.dangerZoneTitle, { color: dangerText }]}>
             Zona de peligro
-          </ThemedText>
+          </Text>
         </View>
-        <ThemedText style={[styles.dangerZoneDescription, { color: mutedText }]}>
+        <Text style={[styles.dangerZoneDescription, { color: mutedText }]}>
           Si ya no necesitas este ejercicio, puedes eliminarlo desde aqui.
-        </ThemedText>
+        </Text>
         <Pressable
           onPress={confirmDeleteExercise}
           disabled={deleteExerciseMutation.isPending}
@@ -571,9 +626,6 @@ const ExerciseDetailScreen = () => {
         onChangeDate={handleChangeDate}
         onSubmit={handleSubmitWeight}
         onClose={closeWeightModal}
-        modalBackground={modalBackground}
-        borderColor={borderColor}
-        mutedText={mutedText}
       />
 
       {currentImageUrl ? (
@@ -591,110 +643,112 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  deleteHeaderButton: {
+    padding: 4,
+    transform: [{ translateX: 3 }],
+  },
   container: {
     padding: 20,
-    gap: 18,
+    gap: 14,
     paddingBottom: 40,
   },
   heroCard: {
     borderWidth: 1,
-    borderRadius: 28,
-    padding: 22,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
+    borderRadius: 26,
+    padding: 20,
   },
   heroBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(61, 100, 244, 0.12)",
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 16,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    marginBottom: 15,
   },
   heroBadgeText: {
-    color: Colors.light.primary,
-    fontWeight: "700",
+    fontFamily: Fonts.extrabold,
+    fontSize: 11.5,
+    letterSpacing: 0.3,
   },
   heroImage: {
     width: "100%",
-    height: 180,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 14,
+    height: 165,
+    borderRadius: 18,
   },
   heroImagePlaceholder: {
     width: "100%",
-    height: 180,
-    borderRadius: 20,
-    borderWidth: 1,
+    height: 165,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
+  },
+  heroImagePlaceholderText: {
+    fontFamily: Fonts.semibold,
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  changeImageWrapper: {
+    marginTop: 15,
+    alignItems: "center",
   },
   changeImageButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "flex-start",
-    gap: 6,
-    borderWidth: 1,
+    gap: 7,
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 16,
+    paddingHorizontal: 17,
+    paddingVertical: 10,
   },
   changeImageButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontFamily: Fonts.bold,
+    fontSize: 13.5,
   },
   title: {
-    fontSize: 32,
-    lineHeight: 36,
-    marginBottom: 8,
+    marginTop: 17,
+    fontSize: 25,
+    lineHeight: 29,
   },
   subtitle: {
-    fontSize: 16,
-    lineHeight: 24,
+    marginTop: 3,
+    fontFamily: Fonts.semibold,
+    fontSize: 13.5,
   },
   metricCard: {
     borderWidth: 1,
-    borderRadius: 24,
-    padding: 22,
-    gap: 8,
+    borderRadius: 22,
+    padding: 19,
+    gap: 6,
   },
   metricLabel: {
-    fontSize: 14,
+    fontFamily: Fonts.bold,
+    fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
   metricValue: {
-    fontSize: 36,
-    lineHeight: 40,
-    fontWeight: "700",
-    color: Colors.light.primary,
+    fontWeight: "800",
+    fontSize: 30,
+    fontVariant: ["tabular-nums"],
   },
   metricHint: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  deleteHeaderButton: {
-    padding: 4,
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: Fonts.medium,
   },
   historyCard: {
     borderWidth: 1,
-    borderRadius: 24,
-    padding: 22,
-    gap: 14,
+    borderRadius: 22,
+    padding: 19,
+    gap: 12,
   },
   historyTitle: {
-    marginBottom: 4,
+    marginBottom: 2,
   },
   emptyHistory: {
-    fontSize: 15,
+    fontSize: 13.5,
+    fontFamily: Fonts.semibold,
     textAlign: "center",
     paddingVertical: 8,
   },
@@ -704,7 +758,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   historyRow: {
-    paddingVertical: 14,
+    paddingVertical: 13,
     paddingHorizontal: 14,
     gap: 4,
     minHeight: 56,
@@ -716,15 +770,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   historyWeight: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: Fonts.bold,
+    fontSize: 16,
   },
   historyDate: {
-    fontSize: 13,
+    fontFamily: Fonts.semibold,
+    fontSize: 12.5,
   },
   historyNote: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontFamily: Fonts.medium,
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   swipeActions: {
     flexDirection: "row",
@@ -746,33 +802,32 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     gap: 4,
     paddingVertical: 8,
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
+    borderTopRightRadius: 14,
+    borderBottomRightRadius: 14,
     borderLeftWidth: 1,
     borderLeftColor: "rgba(255,255,255,0.25)",
   },
   swipeActionText: {
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontFamily: Fonts.bold,
     fontSize: 12,
   },
   registerWeightButton: {
-    marginTop: 4,
+    marginTop: 2,
     borderRadius: 16,
-    paddingVertical: 14,
+    paddingVertical: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.light.primary,
   },
   registerWeightButtonText: {
     color: "#FFFFFF",
+    fontFamily: Fonts.bold,
     fontSize: 15,
-    fontWeight: "700",
   },
   dangerZone: {
     borderWidth: 1,
-    borderRadius: 28,
-    padding: 20,
+    borderRadius: 26,
+    padding: 19,
     gap: 12,
   },
   dangerZoneHeader: {
@@ -781,11 +836,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dangerZoneTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontFamily: Fonts.extrabold,
+    fontSize: 16,
   },
   dangerZoneDescription: {
-    lineHeight: 22,
+    fontFamily: Fonts.medium,
+    lineHeight: 21,
+    fontSize: 13.5,
   },
   deleteExerciseButton: {
     borderRadius: 16,
@@ -795,8 +852,8 @@ const styles = StyleSheet.create({
   },
   deleteExerciseButtonText: {
     color: "#FFFFFF",
+    fontFamily: Fonts.bold,
     fontSize: 15,
-    fontWeight: "700",
   },
 });
 

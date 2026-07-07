@@ -1,33 +1,52 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens for the "Gym Tracker Rediseño" visual language.
+ * Colors are defined for light and dark mode.
  */
 
 import { Platform } from "react-native";
 
-const tintColorLight = "#0a7ea4";
-const tintColorDark = "#fff";
-
 export const Colors = {
   light: {
-    text: "#11181C",
-    background: "#fff",
-    tint: tintColorLight,
-    icon: "#687076",
-    tabIconDefault: "#687076",
-    tabIconSelected: tintColorLight,
+    text: "#101116",
+    textMuted: "#71757F",
+    textFaint: "#9A9EA8",
+    background: "#FFFFFF",
+    surface: "#F5F6F8",
+    surfaceBorder: "rgba(16,17,22,0.06)",
+    surfaceBorderStrong: "rgba(16,17,22,0.10)",
+    tint: "#4B5BF5",
+    icon: "#71757F",
+    tabIconDefault: "#71757F",
+    tabIconSelected: "#4B5BF5",
 
-    primary: "#3D64F4",
+    primary: "#4B5BF5",
+    primarySoft: "#ECEEFE",
+    danger: "#E5484D",
+    dangerBg: "#FDECEC",
+    dangerBorder: "#F8CBCC",
+    sheetHandle: "#E1E2E6",
+    sheetBackdrop: "rgba(12,13,17,0.42)",
   },
   dark: {
-    text: "#ECEDEE",
-    background: "#151718",
-    tint: tintColorDark,
-    icon: "#9BA1A6",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: tintColorDark,
+    text: "#F4F5F7",
+    textMuted: "#9A9EA8",
+    textFaint: "#6A6E78",
+    background: "#0B0C0F",
+    surface: "#16171C",
+    surfaceBorder: "rgba(255,255,255,0.07)",
+    surfaceBorderStrong: "rgba(255,255,255,0.12)",
+    tint: "#7D8BFF",
+    icon: "#9A9EA8",
+    tabIconDefault: "#9A9EA8",
+    tabIconSelected: "#7D8BFF",
 
-    primary: "#3D64F4",
+    primary: "#7D8BFF",
+    primarySoft: "rgba(125,139,255,0.15)",
+    danger: "#FF6B70",
+    dangerBg: "rgba(229,72,77,0.16)",
+    dangerBorder: "rgba(229,72,77,0.3)",
+    sheetHandle: "#2C2E34",
+    sheetBackdrop: "rgba(0,0,0,0.55)",
   },
 };
 
