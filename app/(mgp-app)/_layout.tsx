@@ -38,6 +38,21 @@ const CheckAuthenticationLayout = () => {
     return <Redirect href="/auth/login" />;
   }
 
+  // Sheets nativos (UISheetPresentationController en iOS). Con fitToContents
+  // el sheet mide lo que mide su contenido; contentStyle es obligatorio o el
+  // sheet queda transparente.
+  const sheetScreenOptions: React.ComponentProps<typeof Stack.Screen>["options"] = {
+    presentation: "formSheet",
+    headerShown: false,
+    sheetAllowedDetents: "fitToContents",
+    sheetGrabberVisible: true,
+    sheetCornerRadius: 34,
+    sheetElevation: 24,
+    contentStyle: {
+      backgroundColor: backgroundColor,
+    },
+  };
+
   return (
     <>
       <Stack
@@ -81,6 +96,10 @@ const CheckAuthenticationLayout = () => {
             title: "Detalle del ejercicio",
           }}
         />
+
+        <Stack.Screen name="new-category" options={sheetScreenOptions} />
+        <Stack.Screen name="new-exercise" options={sheetScreenOptions} />
+        <Stack.Screen name="weight-entry" options={sheetScreenOptions} />
       </Stack>
     </>
   );

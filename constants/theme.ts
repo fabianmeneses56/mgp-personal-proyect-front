@@ -25,7 +25,6 @@ export const Colors = {
     dangerBg: "#FDECEC",
     dangerBorder: "#F8CBCC",
     sheetHandle: "#E1E2E6",
-    sheetBackdrop: "rgba(12,13,17,0.42)",
   },
   dark: {
     text: "#F4F5F7",
@@ -46,7 +45,6 @@ export const Colors = {
     dangerBg: "rgba(229,72,77,0.16)",
     dangerBorder: "rgba(229,72,77,0.3)",
     sheetHandle: "#2C2E34",
-    sheetBackdrop: "rgba(0,0,0,0.55)",
   },
 };
 

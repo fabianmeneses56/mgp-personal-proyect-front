@@ -3,16 +3,13 @@ import { updateExerciseImage } from "@/core/exercises/actions/update-exercise-im
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
-import RegisterWeightModal from "@/presentation/exercises/components/RegisterWeightModal";
 import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
 import { Ionicons } from "@expo/vector-icons";
-import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, {
@@ -24,7 +21,6 @@ import React, {
 } from "react";
 import {
   Alert,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -160,15 +156,8 @@ const ExerciseDetailScreen = () => {
   const dangerBorder = useThemeColor({}, "dangerBorder");
   const dangerText = useThemeColor({}, "danger");
 
-  const {
-    weightHistory,
-    isLoading,
-    isRefetching,
-    refetch,
-    createMutation,
-    updateMutation,
-    removeMutation,
-  } = useWeightHistory(String(id));
+  const { weightHistory, isLoading, isRefetching, refetch, removeMutation } =
+    useWeightHistory(String(id));
 
   const latestWeightEntry =
     [...weightHistory].sort(
@@ -178,13 +167,6 @@ const ExerciseDetailScreen = () => {
     ? `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`
     : "Sin registros";
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [formWeight, setFormWeight] = useState("");
-  const [formWeightUnit, setFormWeightUnit] = useState("kg");
-  const [formNote, setFormNote] = useState("");
-  const [formDate, setFormDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
@@ -198,25 +180,19 @@ const ExerciseDetailScreen = () => {
     setImageLoadFailed(false);
   }, [currentImageUrl]);
 
-  const closeWeightModal = () => {
-    setFormWeight("");
-    setFormWeightUnit("kg");
-    setFormNote("");
-    setFormDate(new Date());
-    setShowDatePicker(false);
-    setEditingEntryId(null);
-    setModalVisible(false);
-  };
-
   const handleEditEntry = (entry: WeightHistoryEntry) => {
     swipeableRefs.current.get(entry.id)?.close();
-    setEditingEntryId(entry.id);
-    setFormWeight(entry.weight.toString());
-    setFormWeightUnit(entry.weightUnit);
-    setFormNote(entry.note ?? "");
-    setFormDate(new Date(entry.date));
-    setShowDatePicker(false);
-    setModalVisible(true);
+    router.navigate({
+      pathname: "/weight-entry",
+      params: {
+        exerciseId: String(id),
+        entryId: entry.id,
+        weight: entry.weight.toString(),
+        weightUnit: entry.weightUnit,
+        note: entry.note ?? "",
+        date: entry.date,
+      },
+    });
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -242,53 +218,10 @@ const ExerciseDetailScreen = () => {
   };
 
   const openCreateWeightModal = () => {
-    setEditingEntryId(null);
-    setFormWeight("");
-    setFormWeightUnit("kg");
-    setFormNote("");
-    setFormDate(new Date());
-    setModalVisible(true);
-  };
-
-  const toggleDatePicker = () => {
-    setShowDatePicker((prev) => !prev);
-  };
-
-  const handleChangeDate = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date,
-  ) => {
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      setFormDate(selectedDate);
-    }
-  };
-
-  const handleSubmitWeight = () => {
-    const parsedWeight = Number(formWeight);
-
-    if (!formWeight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
-      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
-      return;
-    }
-
-    const payload = {
-      weight: parsedWeight,
-      weightUnit: formWeightUnit,
-      note: formNote.trim() ? formNote.trim() : undefined,
-      date: formDate.toISOString(),
-    };
-
-    if (editingEntryId) {
-      updateMutation.mutate({ entryId: editingEntryId, payload });
-    } else {
-      createMutation.mutate(payload);
-    }
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    closeWeightModal();
+    router.navigate({
+      pathname: "/weight-entry",
+      params: { exerciseId: String(id) },
+    });
   };
 
   const deleteExerciseMutation = useMutation({
@@ -609,24 +542,6 @@ const ExerciseDetailScreen = () => {
           </Text>
         </Pressable>
       </View>
-
-      <RegisterWeightModal
-        visible={modalVisible}
-        weight={formWeight}
-        weightUnit={formWeightUnit}
-        note={formNote}
-        date={formDate}
-        showDatePicker={showDatePicker}
-        title={editingEntryId ? "Editar peso" : "Registrar nuevo peso"}
-        submitLabel={editingEntryId ? "Guardar cambios" : "Guardar peso"}
-        onChangeWeight={setFormWeight}
-        onChangeWeightUnit={setFormWeightUnit}
-        onChangeNote={setFormNote}
-        onPressDate={toggleDatePicker}
-        onChangeDate={handleChangeDate}
-        onSubmit={handleSubmitWeight}
-        onClose={closeWeightModal}
-      />
 
       {currentImageUrl ? (
         <FullscreenImageModal

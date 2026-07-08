@@ -1,53 +1,46 @@
-import BottomSheetModal from "@/presentation/theme/components/BottomSheetModal";
-import { Fonts } from "@/presentation/theme/fonts";
-import ThemedButton from "@/presentation/theme/components/ThemedButton";
-import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
-import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import React, { useState } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { router, useLocalSearchParams } from "expo-router";
 
-interface RegisterWeightModalProps {
-  visible: boolean;
-  weight: string;
-  weightUnit: string;
-  note: string;
-  date: Date;
-  showDatePicker: boolean;
-  title?: string;
-  submitLabel?: string;
-  onChangeWeight: (value: string) => void;
-  onChangeWeightUnit: (value: string) => void;
-  onChangeNote: (value: string) => void;
-  onPressDate: () => void;
-  onChangeDate: (event: DateTimePickerEvent, selectedDate?: Date) => void;
-  onSubmit: () => void;
-  onClose: () => void;
-}
+import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
+import { Fonts } from "@/presentation/theme/fonts";
+import SheetScreen from "@/presentation/theme/components/SheetScreen";
+import ThemedButton from "@/presentation/theme/components/ThemedButton";
+import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
+import { ThemedText } from "@/presentation/theme/components/themed-text";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
 const WEIGHT_UNITS = ["kg", "lb"];
 
-const RegisterWeightModal = ({
-  visible,
-  weight,
-  weightUnit,
-  note,
-  date,
-  showDatePicker,
-  title = "Registrar nuevo peso",
-  submitLabel = "Guardar peso",
-  onChangeWeight,
-  onChangeWeightUnit,
-  onChangeNote,
-  onPressDate,
-  onChangeDate,
-  onSubmit,
-  onClose,
-}: RegisterWeightModalProps) => {
+const WeightEntryScreen = () => {
+  const params = useLocalSearchParams<{
+    exerciseId: string;
+    entryId?: string;
+    weight?: string;
+    weightUnit?: string;
+    note?: string;
+    date?: string;
+  }>();
+  const { exerciseId, entryId } = params;
+  const isEditing = !!entryId;
+
+  const { createMutation, updateMutation } = useWeightHistory(
+    String(exerciseId)
+  );
+
+  const [weight, setWeight] = useState(params.weight ?? "");
+  const [weightUnit, setWeightUnit] = useState(params.weightUnit || "kg");
+  const [note, setNote] = useState(params.note ?? "");
+  const [date, setDate] = useState(() =>
+    params.date ? new Date(params.date) : new Date()
+  );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const surfaceColor = useThemeColor({}, "surface");
   const borderColor = useThemeColor({}, "surfaceBorder");
   const primaryColor = useThemeColor({}, "primary");
@@ -55,17 +48,58 @@ const RegisterWeightModal = ({
   const faintText = useThemeColor({}, "textFaint");
   const textColor = useThemeColor({}, "text");
 
+  const toggleDatePicker = () => {
+    setShowDatePicker((prev) => !prev);
+  };
+
+  const handleChangeDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
+
+  const handleSubmit = () => {
+    const parsedWeight = Number(weight);
+
+    if (!weight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
+      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
+      return;
+    }
+
+    const payload = {
+      weight: parsedWeight,
+      weightUnit,
+      note: note.trim() ? note.trim() : undefined,
+      date: date.toISOString(),
+    };
+
+    if (entryId) {
+      updateMutation.mutate({ entryId, payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.back();
+  };
+
   return (
-    <BottomSheetModal visible={visible} onClose={onClose}>
+    <SheetScreen>
       <ThemedText type="subtitle" style={styles.modalTitle}>
-        {title}
+        {isEditing ? "Editar peso" : "Registrar nuevo peso"}
       </ThemedText>
 
       <ThemedTextInput
         placeholder="Peso"
         keyboardType="numeric"
         value={weight}
-        onChangeText={onChangeWeight}
+        onChangeText={setWeight}
         autoFocus
       />
 
@@ -73,7 +107,7 @@ const RegisterWeightModal = ({
         {WEIGHT_UNITS.map((unit) => (
           <Pressable
             key={unit}
-            onPress={() => onChangeWeightUnit(unit)}
+            onPress={() => setWeightUnit(unit)}
             style={[
               styles.unitOption,
               weightUnit === unit && { backgroundColor: surfaceColor },
@@ -94,11 +128,11 @@ const RegisterWeightModal = ({
       <ThemedTextInput
         placeholder="Nota (opcional)"
         value={note}
-        onChangeText={onChangeNote}
+        onChangeText={setNote}
       />
 
       <Pressable
-        onPress={onPressDate}
+        onPress={toggleDatePicker}
         style={[styles.dateField, { backgroundColor: surfaceColor, borderColor }]}
       >
         <View>
@@ -116,10 +150,10 @@ const RegisterWeightModal = ({
             value={date}
             mode="date"
             display="inline"
-            onChange={onChangeDate}
+            onChange={handleChangeDate}
           />
           <View style={styles.doneButtonWrapper}>
-            <ThemedButton onPress={onPressDate}>Listo</ThemedButton>
+            <ThemedButton onPress={toggleDatePicker}>Listo</ThemedButton>
           </View>
         </View>
       ) : null}
@@ -129,18 +163,20 @@ const RegisterWeightModal = ({
           value={date}
           mode="date"
           display="default"
-          onChange={onChangeDate}
+          onChange={handleChangeDate}
         />
       ) : null}
 
       <View style={styles.submitButtonWrapper}>
-        <ThemedButton onPress={onSubmit}>{submitLabel}</ThemedButton>
+        <ThemedButton onPress={handleSubmit}>
+          {isEditing ? "Guardar cambios" : "Guardar peso"}
+        </ThemedButton>
       </View>
 
-      <Pressable style={styles.cancelButton} onPress={onClose}>
+      <Pressable style={styles.cancelButton} onPress={() => router.back()}>
         <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
       </Pressable>
-    </BottomSheetModal>
+    </SheetScreen>
   );
 };
 
@@ -204,4 +240,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterWeightModal;
+export default WeightEntryScreen;

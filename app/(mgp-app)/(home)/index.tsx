@@ -1,7 +1,6 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -12,23 +11,16 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
-import { useCategory } from "@/presentation/categories/hooks/useCategory";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
-import BottomSheetModal from "@/presentation/theme/components/BottomSheetModal";
 import { Fonts } from "@/presentation/theme/fonts";
-import ThemedButton from "@/presentation/theme/components/ThemedButton";
-import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { router, useNavigation } from "expo-router";
 
 const HomeScreen = () => {
   const { categoriesQuery } = useCategories();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [formValue, setFormValue] = useState("");
   const navigation = useNavigation();
-  const { productMutation } = useCategory("new");
 
   const surfaceColor = useThemeColor({}, "surface");
   const borderColor = useThemeColor({}, "surfaceBorder");
@@ -42,31 +34,10 @@ const HomeScreen = () => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <AddNewButton onPressAction={() => setModalVisible(true)} />
+        <AddNewButton onPressAction={() => router.navigate("/new-category")} />
       ),
     });
   }, [navigation]);
-
-  const handleSubmit = async () => {
-    if (!formValue.trim()) {
-      Alert.alert("Campo requerido", "Ingresa el nombre de la categoria.");
-      return;
-    }
-
-    await productMutation.mutateAsync({
-      name: formValue.trim(),
-      exercise: [],
-      id: "",
-    });
-
-    setFormValue("");
-    setModalVisible(false);
-  };
-
-  const closeModal = () => {
-    setFormValue("");
-    setModalVisible(false);
-  };
 
   if (categoriesQuery.isLoading) {
     return (
@@ -198,34 +169,6 @@ const HomeScreen = () => {
           </View>
         }
       />
-
-      <BottomSheetModal visible={modalVisible} onClose={closeModal}>
-        <ThemedText type="subtitle" style={styles.modalTitle}>
-          Nueva categoria
-        </ThemedText>
-        <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
-          Dale un nombre claro para encontrar mas rapido tus ejercicios.
-        </ThemedText>
-
-        <Text style={[styles.fieldLabel, { color: faintText }]}>Nombre</Text>
-        <ThemedTextInput
-          placeholder="Nombre de la categoria"
-          autoCapitalize="words"
-          autoFocus
-          value={formValue}
-          onChangeText={setFormValue}
-        />
-
-        <View style={styles.modalButtonWrapper}>
-          <ThemedButton onPress={handleSubmit} disabled={productMutation.isPending}>
-            {productMutation.isPending ? "Guardando..." : "Guardar categoria"}
-          </ThemedButton>
-        </View>
-
-        <Pressable style={styles.cancelButton} onPress={closeModal}>
-          <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
-        </Pressable>
-      </BottomSheetModal>
     </View>
   );
 };
@@ -378,34 +321,6 @@ const styles = StyleSheet.create({
   emptyDescription: {
     textAlign: "center",
     lineHeight: 22,
-  },
-  modalTitle: {
-    marginBottom: 8,
-  },
-  modalDescription: {
-    lineHeight: 21,
-    marginBottom: 20,
-    fontSize: 14,
-  },
-  fieldLabel: {
-    fontFamily: Fonts.bold,
-    fontSize: 11,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  modalButtonWrapper: {
-    marginTop: 6,
-  },
-  cancelButton: {
-    marginTop: 6,
-    alignItems: "center",
-    paddingVertical: 12,
-    marginBottom: 4,
-  },
-  cancelText: {
-    fontFamily: Fonts.semibold,
-    fontSize: 15,
   },
 });
 
