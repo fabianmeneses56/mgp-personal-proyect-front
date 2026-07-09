@@ -1,6 +1,7 @@
 import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { deleteCategory } from "@/core/categories/actions/delete-category.action";
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
+import { toDisplayWeight } from "@/core/weight-history/interfaces/weight-history.interface";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import { Fonts } from "@/presentation/theme/fonts";
@@ -78,7 +79,8 @@ const CategoryScreen = () => {
     }
 
     if (exercise.weightGrams !== undefined) {
-      return `${exercise.weightGrams / 1000} kg`;
+      const unit = exercise.weightUnit ?? "kg";
+      return `${toDisplayWeight(exercise.weightGrams, unit)} ${unit}`;
     }
 
     return "0 kg";

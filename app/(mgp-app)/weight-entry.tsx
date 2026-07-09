@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Keyboard, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -49,6 +49,7 @@ const WeightEntryScreen = () => {
   const textColor = useThemeColor({}, "text");
 
   const toggleDatePicker = () => {
+    Keyboard.dismiss();
     setShowDatePicker((prev) => !prev);
   };
 

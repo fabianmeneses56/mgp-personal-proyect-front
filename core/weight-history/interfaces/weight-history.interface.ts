@@ -15,7 +15,7 @@ export interface WeightHistoryEntry {
 }
 
 export function toDisplayWeight(weightGrams: number, weightUnit: string): number {
-  if (weightUnit === "kg") return weightGrams / 1000;
-  if (weightUnit === "lb") return weightGrams / 453.592;
+  if (weightUnit === "kg") return Math.round((weightGrams / 1000) * 100) / 100;
+  if (weightUnit === "lb") return Math.round((weightGrams / 453.59237) * 100) / 100;
   return weightGrams; // "g"
 }
