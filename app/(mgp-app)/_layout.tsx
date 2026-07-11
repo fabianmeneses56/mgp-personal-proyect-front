@@ -1,6 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, View } from "react-native";
 
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
@@ -16,6 +16,19 @@ const CheckAuthenticationLayout = () => {
 
   useEffect(() => {
     checkStatus();
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        nextAppState === "active" &&
+        useAuthStore.getState().status === "authenticated"
+      ) {
+        checkStatus();
+      }
+    });
+
+    return () => subscription.remove();
   }, []);
 
   if (status === "checking") {
