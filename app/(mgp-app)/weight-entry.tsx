@@ -66,9 +66,10 @@ const WeightEntryScreen = () => {
   };
 
   const handleSubmit = () => {
-    const parsedWeight = Number(weight);
+    const normalizedWeight = weight.trim().replace(",", ".");
+    const parsedWeight = Number(normalizedWeight);
 
-    if (!weight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
+    if (!normalizedWeight || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
       Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
       return;
     }
@@ -98,7 +99,7 @@ const WeightEntryScreen = () => {
 
       <ThemedTextInput
         placeholder="Peso"
-        keyboardType="numeric"
+        keyboardType="decimal-pad"
         value={weight}
         onChangeText={setWeight}
         autoFocus
