@@ -169,6 +169,7 @@ const ExerciseDetailScreen = () => {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
+  const openRowIdRef = useRef<string | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
     imageUrl || undefined,
   );
@@ -465,8 +466,27 @@ const ExerciseDetailScreen = () => {
                       if (el) swipeableRefs.current.set(entry.id, el);
                       else swipeableRefs.current.delete(entry.id);
                     }}
-                    friction={2}
+                    friction={1}
+                    rightThreshold={40}
                     overshootRight={false}
+                    animationOptions={{
+                      mass: 1,
+                      stiffness: 250,
+                      damping: 28,
+                      overshootClamping: true,
+                    }}
+                    onSwipeableWillOpen={() => {
+                      const openId = openRowIdRef.current;
+                      if (openId && openId !== entry.id) {
+                        swipeableRefs.current.get(openId)?.close();
+                      }
+                      openRowIdRef.current = entry.id;
+                    }}
+                    onSwipeableClose={() => {
+                      if (openRowIdRef.current === entry.id) {
+                        openRowIdRef.current = null;
+                      }
+                    }}
                     renderRightActions={(_, drag) => (
                       <SwipeRightActions
                         drag={drag}
