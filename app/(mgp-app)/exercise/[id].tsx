@@ -220,7 +220,13 @@ const ExerciseDetailScreen = () => {
   const openCreateWeightModal = () => {
     router.navigate({
       pathname: "/weight-entry",
-      params: { exerciseId: String(id) },
+      params: {
+        exerciseId: String(id),
+        ...(latestWeightEntry && {
+          weight: latestWeightEntry.weight.toString(),
+          weightUnit: latestWeightEntry.weightUnit,
+        }),
+      },
     });
   };
 
