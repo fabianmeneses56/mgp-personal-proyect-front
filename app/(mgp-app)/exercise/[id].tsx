@@ -7,6 +7,7 @@ import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExer
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { WeightProgressChart } from "@/presentation/weight-history/components/WeightProgressChart";
 import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -600,6 +601,35 @@ const ExerciseDetailScreen = () => {
         </Pressable>
       </View>
 
+      {!isLoading && !isError && weightHistory.length >= 2 ? (
+        <Pressable
+          onPress={() =>
+            router.navigate({
+              pathname: "/exercise-progress",
+              params: { exerciseId: String(id), name },
+            })
+          }
+          style={({ pressed }) => [
+            styles.progressCard,
+            {
+              backgroundColor: surfaceColor,
+              borderColor,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <View style={styles.progressCardHeader}>
+            <Text style={[styles.progressCardTitle, { color: textColor }]}>
+              Progreso de peso
+            </Text>
+            <Text style={[styles.progressCardHint, { color: primaryColor }]}>
+              Ver progreso →
+            </Text>
+          </View>
+          <WeightProgressChart entries={weightHistory} variant="compact" />
+        </Pressable>
+      ) : null}
+
       <View
         style={[
           styles.dangerZone,
@@ -742,6 +772,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     fontFamily: Fonts.medium,
+  },
+  progressCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 19,
+    gap: 12,
+  },
+  progressCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  progressCardTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: 15,
+  },
+  progressCardHint: {
+    fontFamily: Fonts.bold,
+    fontSize: 12.5,
   },
   historyCard: {
     borderWidth: 1,

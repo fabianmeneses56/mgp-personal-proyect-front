@@ -5,7 +5,9 @@
       "mcp__agent-device__screenshot",
       "mcp__agent-device__open",
       "mcp__agent-device__devices",
-      "mcp__agent-device__session"
+      "mcp__agent-device__session",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)"
     ]
   },
   "enabledMcpjsonServers": [

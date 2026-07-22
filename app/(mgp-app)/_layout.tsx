@@ -110,6 +110,13 @@ const CheckAuthenticationLayout = () => {
           }}
         />
 
+        <Stack.Screen
+          name="exercise-progress"
+          options={{
+            title: "Progreso",
+          }}
+        />
+
         <Stack.Screen name="new-category" options={sheetScreenOptions} />
         <Stack.Screen name="new-exercise" options={sheetScreenOptions} />
         <Stack.Screen name="weight-entry" options={sheetScreenOptions} />

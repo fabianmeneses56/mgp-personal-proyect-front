@@ -2,7 +2,7 @@ import { createWeightHistory, CreateWeightHistoryPayload } from "@/core/weight-h
 import { deleteWeightHistory } from "@/core/weight-history/actions/delete-weight-history.action";
 import { getWeightHistory } from "@/core/weight-history/actions/get-weight-history.action";
 import { updateWeightHistory, UpdateWeightHistoryPayload } from "@/core/weight-history/actions/update-weight-history.action";
-import { toDisplayWeight, WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
+import { toDisplayWeight, toKg, WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 
@@ -17,6 +17,7 @@ export const useWeightHistory = (exerciseId: string) => {
         id: entry.id,
         weight: toDisplayWeight(entry.weightGrams, entry.weightUnit),
         weightUnit: entry.weightUnit,
+        weightKg: toKg(entry.weightGrams),
         note: entry.note ?? undefined,
         date: entry.date,
       })),
