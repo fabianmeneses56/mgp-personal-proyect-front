@@ -61,10 +61,11 @@ const NewExerciseScreen = () => {
       return;
     }
 
-    const parsedWeight = Number(exerciseWeight);
+    const normalizedWeight = exerciseWeight.trim().replace(",", ".");
+    const parsedWeight = Number(normalizedWeight);
 
-    if (Number.isNaN(parsedWeight)) {
-      Alert.alert("Campo requerido", "Ingresa un peso valido.");
+    if (!normalizedWeight || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
+      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
       return;
     }
 
@@ -99,6 +100,7 @@ const NewExerciseScreen = () => {
         onChangeText={setExerciseName}
         autoCapitalize="words"
         autoFocus
+        maxLength={40}
       />
 
       <View style={styles.weightRow}>
@@ -106,7 +108,7 @@ const NewExerciseScreen = () => {
           placeholder="Peso"
           value={exerciseWeight}
           onChangeText={setExerciseWeight}
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
           style={styles.weightInput}
         />
 

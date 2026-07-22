@@ -228,7 +228,11 @@ const CategoryScreen = () => {
       </View>
 
       <View style={styles.cardInfo}>
-        <ThemedText type="defaultSemiBold" style={styles.exerciseName}>
+        <ThemedText
+          type="defaultSemiBold"
+          style={styles.exerciseName}
+          numberOfLines={1}
+        >
           {item.name}
         </ThemedText>
         <View style={styles.metaRow}>

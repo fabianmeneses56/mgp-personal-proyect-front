@@ -143,7 +143,11 @@ const HomeScreen = () => {
             </View>
 
             <View style={styles.categoryInfo}>
-              <ThemedText type="defaultSemiBold" style={styles.categoryName}>
+              <ThemedText
+                type="defaultSemiBold"
+                style={styles.categoryName}
+                numberOfLines={1}
+              >
                 {item.name}
               </ThemedText>
               <Text style={[styles.categoryMeta, { color: faintText }]}>
@@ -158,15 +162,32 @@ const HomeScreen = () => {
           </Pressable>
         )}
         ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText type="subtitle" style={styles.emptyTitle}>
-              Aun no hay categorias
-            </ThemedText>
-            <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
-              Crea tu primera categoria con el boton superior para empezar a
-              organizar tus ejercicios.
-            </ThemedText>
-          </View>
+          categoriesQuery.isError ? (
+            <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
+              <ThemedText type="subtitle" style={styles.emptyTitle}>
+                No pudimos cargar tus categorias.
+              </ThemedText>
+              <Pressable
+                onPress={() => categoriesQuery.refetch()}
+                hitSlop={8}
+                style={styles.retryButton}
+              >
+                <Text style={[styles.retryText, { color: primaryColor }]}>
+                  Reintentar
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
+              <ThemedText type="subtitle" style={styles.emptyTitle}>
+                Aun no hay categorias
+              </ThemedText>
+              <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
+                Crea tu primera categoria con el boton superior para empezar a
+                organizar tus ejercicios.
+              </ThemedText>
+            </View>
+          )
         }
       />
     </View>
@@ -321,6 +342,13 @@ const styles = StyleSheet.create({
   emptyDescription: {
     textAlign: "center",
     lineHeight: 22,
+  },
+  retryButton: {
+    marginTop: 4,
+  },
+  retryText: {
+    fontFamily: Fonts.bold,
+    fontSize: 14,
   },
 });
 

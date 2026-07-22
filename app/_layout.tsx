@@ -1,5 +1,5 @@
 import { FontsToLoad } from "@/presentation/theme/fonts";
-import { useColorScheme } from "@/presentation/theme/hooks/use-color-scheme.web";
+import { useColorScheme } from "@/presentation/theme/hooks/use-color-scheme";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import {
   DarkTheme,

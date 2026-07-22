@@ -3,7 +3,9 @@
     "allow": [
       "mcp__agent-device__click",
       "mcp__agent-device__screenshot",
-      "mcp__agent-device__open"
+      "mcp__agent-device__open",
+      "mcp__agent-device__devices",
+      "mcp__agent-device__session"
     ]
   },
   "enabledMcpjsonServers": [

@@ -17,7 +17,6 @@ export const useCategory = (categoryId: string) => {
 
     onSuccess(data: Category) {
       productIdRef.current = data.id;
-      console.log("response", data);
       queryClient.invalidateQueries({
         queryKey: ["categories"],
       });

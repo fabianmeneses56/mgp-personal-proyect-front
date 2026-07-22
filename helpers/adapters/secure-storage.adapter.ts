@@ -37,7 +37,6 @@ export class SecureStorageAdapter {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.log(error);
       Alert.alert("Error", "Failed to delete data");
     }
   }

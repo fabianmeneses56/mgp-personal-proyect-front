@@ -65,7 +65,9 @@ const WeightEntryScreen = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  const handleSubmit = async () => {
     const normalizedWeight = weight.trim().replace(",", ".");
     const parsedWeight = Number(normalizedWeight);
 
@@ -81,14 +83,19 @@ const WeightEntryScreen = () => {
       date: date.toISOString(),
     };
 
-    if (entryId) {
-      updateMutation.mutate({ entryId, payload });
-    } else {
-      createMutation.mutate(payload);
-    }
+    try {
+      if (entryId) {
+        await updateMutation.mutateAsync({ entryId, payload });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.back();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.back();
+    } catch {
+      // El Alert de error ya lo dispara useWeightHistory (onError de la mutacion);
+      // el modal permanece abierto para que el usuario pueda reintentar.
+    }
   };
 
   return (
@@ -170,12 +177,20 @@ const WeightEntryScreen = () => {
       ) : null}
 
       <View style={styles.submitButtonWrapper}>
-        <ThemedButton onPress={handleSubmit}>
-          {isEditing ? "Guardar cambios" : "Guardar peso"}
+        <ThemedButton onPress={handleSubmit} disabled={isSaving}>
+          {isSaving
+            ? "Guardando..."
+            : isEditing
+              ? "Guardar cambios"
+              : "Guardar peso"}
         </ThemedButton>
       </View>
 
-      <Pressable style={styles.cancelButton} onPress={() => router.back()}>
+      <Pressable
+        style={styles.cancelButton}
+        onPress={() => router.back()}
+        disabled={isSaving}
+      >
         <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
       </Pressable>
     </SheetScreen>

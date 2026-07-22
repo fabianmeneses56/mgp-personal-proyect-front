@@ -10,6 +10,7 @@ import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, {
@@ -156,8 +157,14 @@ const ExerciseDetailScreen = () => {
   const dangerBorder = useThemeColor({}, "dangerBorder");
   const dangerText = useThemeColor({}, "danger");
 
-  const { weightHistory, isLoading, isRefetching, refetch, removeMutation } =
-    useWeightHistory(String(id));
+  const {
+    weightHistory,
+    isLoading,
+    isRefetching,
+    isError,
+    refetch,
+    removeMutation,
+  } = useWeightHistory(String(id));
 
   const latestWeightEntry =
     [...weightHistory].sort(
@@ -213,6 +220,28 @@ const ExerciseDetailScreen = () => {
             swipeableRefs.current.get(entryId)?.close();
             setDeletingId(entryId);
           },
+        },
+      ],
+    );
+  };
+
+  const showHistoryRowActionSheet = (entry: WeightHistoryEntry) => {
+    Alert.alert(
+      "Registro de peso",
+      `${entry.weight} ${entry.weightUnit} · ${new Date(entry.date).toLocaleDateString()}`,
+      [
+        {
+          text: "Editar",
+          onPress: () => handleEditEntry(entry),
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => handleDeleteEntry(entry.id),
+        },
+        {
+          text: "Cancelar",
+          style: "cancel",
         },
       ],
     );
@@ -440,6 +469,17 @@ const ExerciseDetailScreen = () => {
               ]}
             />
           ))
+        ) : isError ? (
+          <View style={styles.historyErrorState}>
+            <Text style={[styles.emptyHistory, { color: faintText }]}>
+              No pudimos cargar el historial.
+            </Text>
+            <Pressable onPress={() => refetch()} hitSlop={8}>
+              <Text style={[styles.retryText, { color: primaryColor }]}>
+                Reintentar
+              </Text>
+            </Pressable>
+          </View>
         ) : weightHistory.length === 0 ? (
           <Text style={[styles.emptyHistory, { color: faintText }]}>
             Sin registros de peso
@@ -447,6 +487,7 @@ const ExerciseDetailScreen = () => {
         ) : null}
 
         {!isLoading &&
+          !isError &&
           [...weightHistory]
             .sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -496,7 +537,31 @@ const ExerciseDetailScreen = () => {
                       />
                     )}
                   >
-                    <View style={[styles.historyRow, { backgroundColor }]}>
+                    <Pressable
+                      onLongPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        showHistoryRowActionSheet(entry);
+                      }}
+                      delayLongPress={400}
+                      accessible
+                      accessibilityLabel={`${entry.weight} ${entry.weightUnit}, ${new Date(entry.date).toLocaleDateString()}${entry.note ? `, ${entry.note}` : ""}`}
+                      accessibilityHint="Mantén presionado para editar o eliminar este registro"
+                      accessibilityActions={[
+                        { name: "edit", label: "Editar" },
+                        { name: "delete", label: "Eliminar" },
+                      ]}
+                      onAccessibilityAction={(event) => {
+                        switch (event.nativeEvent.actionName) {
+                          case "edit":
+                            handleEditEntry(entry);
+                            break;
+                          case "delete":
+                            handleDeleteEntry(entry.id);
+                            break;
+                        }
+                      }}
+                      style={[styles.historyRow, { backgroundColor }]}
+                    >
                       <View style={styles.historyRowTop}>
                         <Text
                           style={[styles.historyWeight, { color: textColor }]}
@@ -516,7 +581,7 @@ const ExerciseDetailScreen = () => {
                           {entry.note}
                         </Text>
                       ) : null}
-                    </View>
+                    </Pressable>
                   </ReanimatedSwipeable>
                 </View>
               </AnimatedHistoryRow>
@@ -692,6 +757,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
     textAlign: "center",
     paddingVertical: 8,
+  },
+  historyErrorState: {
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 4,
+  },
+  retryText: {
+    fontFamily: Fonts.bold,
+    fontSize: 13.5,
   },
   historyRowWrapper: {
     borderWidth: 1,

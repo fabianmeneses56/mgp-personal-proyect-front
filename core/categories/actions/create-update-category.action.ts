@@ -28,6 +28,6 @@ async function createCategory(category: Partial<Category>) {
 
     return data;
   } catch (error) {
-    throw new Error("Error al actualizar el producto");
+    throw new Error("Error al guardar la categoria");
   }
 }

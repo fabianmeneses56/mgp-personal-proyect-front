@@ -9,7 +9,6 @@ export const getCategoriesByUser = async () => {
 
     return data;
   } catch (error) {
-    console.log("error", error);
     throw new Error("Unable to load categories");
   }
 };

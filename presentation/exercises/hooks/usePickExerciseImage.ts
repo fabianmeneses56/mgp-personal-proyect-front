@@ -3,6 +3,10 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+// iOS camera photos default to HEIC/HEIF. expo-image-picker transcodes them to
+// JPEG when `quality` < 1 and/or `allowsEditing` is set, but some devices still
+// report the original mime type. Treat them as JPEG instead of rejecting them.
+const HEIC_MIME_TYPES = ["image/heic", "image/heif"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const buildFileName = (uri: string, mimeType: string) => {
@@ -12,6 +16,9 @@ const buildFileName = (uri: string, mimeType: string) => {
   const extension = mimeType.split("/").pop();
   return `exercise-image.${extension}`;
 };
+
+const normalizeFileName = (fileName: string, wasHeic: boolean) =>
+  wasHeic ? fileName.replace(/\.(heic|heif)$/i, ".jpg") : fileName;
 
 export const usePickExerciseImage = () => {
   const pickImage = async (): Promise<PickedExerciseImage | null> => {
@@ -27,12 +34,15 @@ export const usePickExerciseImage = () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.8,
+      allowsEditing: true,
     });
 
     if (result.canceled) return null;
 
     const asset = result.assets[0];
-    const mimeType = asset.mimeType ?? "";
+    const rawMimeType = (asset.mimeType ?? "").toLowerCase();
+    const isHeic = HEIC_MIME_TYPES.includes(rawMimeType);
+    const mimeType = isHeic ? "image/jpeg" : rawMimeType;
 
     if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
       Alert.alert("Formato no soportado", "Selecciona una imagen en formato JPEG, PNG o WEBP.");
@@ -47,7 +57,10 @@ export const usePickExerciseImage = () => {
     return {
       uri: asset.uri,
       mimeType,
-      fileName: asset.fileName ?? buildFileName(asset.uri, mimeType),
+      fileName: normalizeFileName(
+        asset.fileName ?? buildFileName(asset.uri, mimeType),
+        isHeic
+      ),
     };
   };
 

@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { Category } from "@/core/categories/interfaces/category.interface";
 import { useCategory } from "@/presentation/categories/hooks/useCategory";
 import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
@@ -13,13 +15,33 @@ import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 const NewCategoryScreen = () => {
   const [formValue, setFormValue] = useState("");
   const { productMutation } = useCategory("new");
+  const queryClient = useQueryClient();
 
   const mutedText = useThemeColor({}, "textMuted");
   const faintText = useThemeColor({}, "textFaint");
 
   const handleSubmit = async () => {
-    if (!formValue.trim()) {
+    const trimmedName = formValue.trim();
+
+    if (!trimmedName) {
       Alert.alert("Campo requerido", "Ingresa el nombre de la categoria.");
+      return;
+    }
+
+    const cachedCategories = queryClient.getQueryData<Category[]>([
+      "categories",
+    ]);
+
+    const isDuplicate = cachedCategories?.some(
+      (category) =>
+        category.name.trim().toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      Alert.alert(
+        "Nombre duplicado",
+        "Ya existe una categoria con ese nombre."
+      );
       return;
     }
 
@@ -56,6 +78,7 @@ const NewCategoryScreen = () => {
         autoFocus
         value={formValue}
         onChangeText={setFormValue}
+        maxLength={40}
       />
 
       <View style={styles.modalButtonWrapper}>
