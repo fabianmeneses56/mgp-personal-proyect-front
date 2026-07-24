@@ -1,50 +1,55 @@
-# Welcome to your Expo app 👋
+# MGP — Personal Project (Front)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación Expo (React Native) para llevar el control de categorías y ejercicios de entrenamiento, con navegación basada en archivos (Expo Router). El backend ("mgp") es una API separada consumida vía axios; este repositorio no contiene código de backend.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- [Expo](https://expo.dev) / React Native
+- [Expo Router](https://docs.expo.dev/router/introduction) (navegación basada en archivos)
+- [React Query](https://tanstack.com/query/latest) para el manejo de datos remotos
+- [Zustand](https://github.com/pmndrs/zustand) para estado global (autenticación)
+- Axios para el consumo de la API
+- `expo-secure-store` para persistencia segura del token de autenticación
 
-   ```bash
-   npm install
-   ```
+## Estructura del proyecto
 
-2. Start the app
+- **`app/`** — rutas de Expo Router. Las pantallas importan la lógica de negocio y solo la adaptan para mostrarla.
+  - `app/auth/` — rutas de login/registro (fuera del grupo autenticado).
+  - `app/(mgp-app)/` — grupo autenticado, protegido según el estado de `useAuthStore`.
+- **`core/`** — lógica de dominio por feature (`auth`, `categories`, `exercises`): acciones que llaman a la API, interfaces de dominio y el cliente axios compartido (`core/api/mgpApi.ts`).
+- **`presentation/`** — hooks (React Query), stores (Zustand) y componentes de UI reutilizables (`Themed*`, temas claro/oscuro).
+- **`helpers/adapters/secure-storage.adapter.ts`** — adaptador sobre `expo-secure-store` para persistir el token de autenticación.
 
-   ```bash
-   npx expo start
-   ```
+## Requisitos previos
 
-In the output, you'll find options to open the app in a
+- Node.js
+- npm
+- Expo CLI (se ejecuta vía `npx`/`npm run`)
+- Un simulador iOS/Android o la app [Expo Go](https://expo.dev/go)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Configuración
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Las variables de entorno se leen desde un archivo `.env` (no versionado) usando el prefijo `EXPO_PUBLIC_*`:
 
-## Get a fresh project
+- `EXPO_PUBLIC_STAGE` — `"dev"` o `"prod"`
+- `EXPO_PUBLIC_API_URL` — URL de la API usada cuando `STAGE === "prod"`
+- `EXPO_PUBLIC_API_URL_IOS` / `EXPO_PUBLIC_API_URL_ANDROID` — URLs usadas en desarrollo, seleccionadas según la plataforma
 
-When you're ready, run:
+## Instalación
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Comandos
 
-## Learn more
+```bash
+npm run start          # levanta el servidor de desarrollo de Expo
+npm run ios            # expo start --ios
+npm run android        # expo start --android
+npm run web             # expo start --web
+npm run lint            # expo lint
+npm run reset-project   # mueve app/ a app-example/ y crea un app/ en blanco (no ejecutar salvo que se indique)
+```
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Actualmente el proyecto no tiene un test runner configurado.
