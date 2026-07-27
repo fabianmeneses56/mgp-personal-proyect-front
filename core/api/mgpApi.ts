@@ -1,15 +1,19 @@
 import { SecureStorageAdapter } from "@/helpers/adapters/secure-storage.adapter";
 import axios, { isAxiosError } from "axios";
 import { Platform } from "react-native";
+import { resolveApiUrl, Stage } from "./resolveApiUrl";
 
-const STAGE = process.env.EXPO_PUBLIC_STAGE || "dev";
+const STAGE: Stage = process.env.EXPO_PUBLIC_STAGE === "prod" ? "prod" : "dev";
 
-export const API_URL =
-  STAGE === "prod"
-    ? process.env.EXPO_PUBLIC_API_URL
-    : Platform.OS === "ios"
-      ? process.env.EXPO_PUBLIC_API_URL_IOS
-      : process.env.EXPO_PUBLIC_API_URL_ANDROID;
+export const API_URL = resolveApiUrl({
+  stage: STAGE,
+  platform: Platform.OS,
+  urls: {
+    prod: process.env.EXPO_PUBLIC_API_URL,
+    devIos: process.env.EXPO_PUBLIC_API_URL_IOS,
+    devAndroid: process.env.EXPO_PUBLIC_API_URL_ANDROID,
+  },
+});
 
 const mgpApi = axios.create({
   baseURL: API_URL,
