@@ -37,6 +37,7 @@ const NewExerciseScreen = () => {
   const { pickImage } = usePickExerciseImage();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets failure flag when the selected image changes
     setImagePreviewFailed(false);
   }, [selectedImage]);
 
