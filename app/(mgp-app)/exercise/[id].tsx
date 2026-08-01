@@ -123,6 +123,7 @@ function AnimatedHistoryRow({
       onLayout={(e) => {
         const h = e.nativeEvent.layout.height;
         if (height.value === null && h > 0) {
+          // eslint-disable-next-line react-hooks/immutability -- Reanimated shared value mutation, not React state
           height.value = h;
         }
       }}
@@ -186,6 +187,7 @@ const ExerciseDetailScreen = () => {
   const { pickImage } = usePickExerciseImage();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets failure flag when the image URL changes
     setImageLoadFailed(false);
   }, [currentImageUrl]);
 
