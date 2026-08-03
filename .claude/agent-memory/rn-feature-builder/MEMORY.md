@@ -1,0 +1,1 @@
+- [Cache check in sheets](feedback_cache_check_in_sheets.md) — in modals, prefer `getQueryData` over mounting a feature's query hook for read-only cache checks (e.g. duplicate-name validation).
