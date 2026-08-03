@@ -7,7 +7,8 @@
       "mcp__agent-device__devices",
       "mcp__agent-device__session",
       "Bash(npx eslint *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(agent-device *)"
     ]
   },
   "enabledMcpjsonServers": [
