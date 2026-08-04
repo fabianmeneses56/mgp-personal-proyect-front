@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:prod-api": "node ./scripts/start-with-env.js .env.production start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "ios:prod-api": "node ./scripts/start-with-env.js .env.production run:ios",
     "web": "expo start --web",
     "lint": "expo lint"
   },

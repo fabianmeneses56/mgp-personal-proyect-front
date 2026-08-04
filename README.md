@@ -29,11 +29,31 @@ Aplicación Expo (React Native) para llevar el control de categorías y ejercici
 
 ## Configuración
 
-Las variables de entorno se leen desde un archivo `.env` (no versionado) usando el prefijo `EXPO_PUBLIC_*`:
+Las variables de entorno se leen desde archivos `.env` (ninguno versionado) usando el prefijo `EXPO_PUBLIC_*`. Cada uno tiene su plantilla `.example` versionada:
 
-- `EXPO_PUBLIC_STAGE` — `"dev"` o `"prod"`
-- `EXPO_PUBLIC_API_URL` — URL de la API usada cuando `STAGE === "prod"`
-- `EXPO_PUBLIC_API_URL_IOS` / `EXPO_PUBLIC_API_URL_ANDROID` — URLs usadas en desarrollo, seleccionadas según la plataforma
+```bash
+cp .env.example .env
+cp .env.development.example .env.development
+cp .env.production.example .env.production
+```
+
+| Archivo            | Contenido                                                                  |
+| ------------------ | -------------------------------------------------------------------------- |
+| `.env`             | Compartido entre todos los modos (`E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`)     |
+| `.env.development` | `EXPO_PUBLIC_STAGE=dev` + `EXPO_PUBLIC_API_URL_IOS` / `_ANDROID` (IP local)  |
+| `.env.production`  | `EXPO_PUBLIC_STAGE=prod` + `EXPO_PUBLIC_API_URL` (API desplegada)            |
+
+`core/api/mgpApi.ts` elige la URL con `resolveApiUrl`: si `EXPO_PUBLIC_STAGE === "prod"` usa `EXPO_PUBLIC_API_URL`, y si no, la variante iOS o Android según `Platform.OS`.
+
+Expo resuelve los archivos según `NODE_ENV`, de mayor a menor prioridad:
+
+```
+.env.${NODE_ENV}.local -> .env.local -> .env.${NODE_ENV} -> .env
+```
+
+`NODE_ENV` lo pone el propio Expo CLI: `development` en `expo start` y builds debug, `production` en `expo export`, builds Release y EAS Build. Las variables ya presentes en el entorno del shell tienen prioridad sobre cualquier archivo — es lo que aprovecha `npm run start:prod-api` para levantar un bundle de desarrollo apuntando a la API de producción.
+
+> Las variables `EXPO_PUBLIC_*` se inyectan en el bundle al compilar: tras cambiar de entorno hay que reiniciar Metro (`npx expo start --clear`).
 
 ## Instalación
 
@@ -44,9 +64,11 @@ npm install
 ## Comandos
 
 ```bash
-npm run start          # levanta el servidor de desarrollo de Expo
-npm run ios            # expo start --ios
-npm run android        # expo start --android
+npm run start           # levanta el servidor de desarrollo de Expo
+npm run start:prod-api  # igual, pero apuntando a la API de .env.production
+npm run ios             # expo run:ios
+npm run ios:prod-api    # expo run:ios apuntando a la API de .env.production
+npm run android         # expo run:android
 npm run web             # expo start --web
 npm run lint            # expo lint
 npm run reset-project   # mueve app/ a app-example/ y crea un app/ en blanco (no ejecutar salvo que se indique)
