@@ -9,24 +9,43 @@ An Expo (React Native) app for tracking workout categories and exercises, using 
 ## Commands
 
 ```bash
-npm install          # install dependencies
-npm run start         # expo start (dev server, opens Expo Go/simulators)
-npm run ios           # expo start --ios
-npm run android       # expo start --android
-npm run web           # expo start --web
-npm run lint          # expo lint (eslint-config-expo flat config)
-npm run reset-project # moves starter app/ to app-example/ and creates a blank app/ (do not run unless asked)
+npm install            # install dependencies
+npm run start          # expo start (dev server, opens Expo Go/simulators)
+npm run start:prod-api # same, but forcing the API URLs from .env.production
+npm run ios            # expo run:ios
+npm run ios:prod-api   # expo run:ios, forcing the API URLs from .env.production
+npm run android        # expo run:android
+npm run web            # expo start --web
+npm run lint           # expo lint (eslint-config-expo flat config)
+npm run reset-project  # moves starter app/ to app-example/ and creates a blank app/ (do not run unless asked)
 ```
 
 There is no test runner configured in this project.
 
 ## Environment
 
-Config is read from `.env` via `EXPO_PUBLIC_*` vars (see `core/api/mgpApi.ts`):
+Config is read from `.env*` files via `EXPO_PUBLIC_*` vars (see `core/api/mgpApi.ts` +
+`core/api/resolveApiUrl.ts`). None of them are versioned; each has a committed
+`.example` template (`cp .env.development.example .env.development`, etc.).
 
-- `EXPO_PUBLIC_STAGE` — `"dev"` or `"prod"`
-- `EXPO_PUBLIC_API_URL` — used when `STAGE === "prod"`
-- `EXPO_PUBLIC_API_URL_IOS` / `EXPO_PUBLIC_API_URL_ANDROID` — used in dev, selected by `Platform.OS`
+- `.env` — shared across modes: `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`
+- `.env.development` — `EXPO_PUBLIC_STAGE=dev` plus `EXPO_PUBLIC_API_URL_IOS` /
+  `EXPO_PUBLIC_API_URL_ANDROID` (LAN IP, selected by `Platform.OS`)
+- `.env.production` — `EXPO_PUBLIC_STAGE=prod` plus `EXPO_PUBLIC_API_URL` (deployed API)
+
+Expo resolves these by `NODE_ENV`, highest priority first:
+`.env.${NODE_ENV}.local` → `.env.local` → `.env.${NODE_ENV}` → `.env`. Expo CLI sets
+`NODE_ENV` itself: `development` for `expo start`/debug builds, `production` for
+`expo export`, Release builds and EAS Build.
+
+Vars already present in the shell environment always win over the files. That is what
+`scripts/start-with-env.js` (behind `npm run start:prod-api` / `npm run ios:prod-api`)
+relies on to run a *development* bundle against the production API without flipping
+`NODE_ENV`. Since `EXPO_PUBLIC_*` values are inlined at bundle time, restart Metro
+(`npx expo start --clear`) after switching environments.
+
+EAS Build only uploads git-tracked files, so `.env.production` will not reach the
+builder — those values must be set as EAS Environment Variables when `eas.json` is added.
 
 ## Architecture
 
