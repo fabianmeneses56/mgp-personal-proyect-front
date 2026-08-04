@@ -7,7 +7,7 @@ import DateTimePicker, {
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
+import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
@@ -29,7 +29,7 @@ const WeightEntryScreen = () => {
   const { exerciseId, entryId } = params;
   const isEditing = !!entryId;
 
-  const { createMutation, updateMutation } = useWeightHistory(
+  const { saveEntry, isSaving } = useWeightHistoryManager(
     String(exerciseId)
   );
 
@@ -65,8 +65,6 @@ const WeightEntryScreen = () => {
     }
   };
 
-  const isSaving = createMutation.isPending || updateMutation.isPending;
-
   const handleSubmit = async () => {
     const normalizedWeight = weight.trim().replace(",", ".");
     const parsedWeight = Number(normalizedWeight);
@@ -84,16 +82,12 @@ const WeightEntryScreen = () => {
     };
 
     try {
-      if (entryId) {
-        await updateMutation.mutateAsync({ entryId, payload });
-      } else {
-        await createMutation.mutateAsync(payload);
-      }
+      await saveEntry(payload, entryId);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch {
-      // El Alert de error ya lo dispara useWeightHistory (onError de la mutacion);
+      // El Alert de error ya lo dispara useWeightHistoryManager (onError de la mutacion);
       // el modal permanece abierto para que el usuario pueda reintentar.
     }
   };
