@@ -30,9 +30,6 @@ const ExerciseDetailScreen = () => {
   const { id, name, categoryName, imageUrl } = useLocalSearchParams<{
     id: string;
     name?: string;
-    weightGrams?: string;
-    weight?: string;
-    weightUnit?: string;
     categoryName?: string;
     imageUrl?: string;
   }>();
