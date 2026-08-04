@@ -1,20 +1,15 @@
-import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
-import { updateExerciseImage } from "@/core/exercises/actions/update-exercise-image.action";
-import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
-import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
+import AnimatedHistoryRowComponent from "@/presentation/exercises/components/AnimatedHistoryRowComponent";
 import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
-import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
+import { useExerciseActions } from "@/presentation/exercises/hooks/useExerciseActions";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { WeightProgressChart } from "@/presentation/weight-history/components/WeightProgressChart";
-import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
+import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, {
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -29,123 +24,19 @@ import {
   StyleSheet,
   Text,
   View,
-  ViewStyle,
 } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  runOnJS,
-  SharedValue,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-
-const SWIPE_ACTIONS_WIDTH = 136;
-
-function SwipeRightActions({
-  drag,
-  primaryColor,
-  onEdit,
-  onDelete,
-}: {
-  drag: SharedValue<number>;
-  primaryColor: string;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: interpolate(
-          drag.value,
-          [-SWIPE_ACTIONS_WIDTH, 0],
-          [0, SWIPE_ACTIONS_WIDTH],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
-  return (
-    <Animated.View style={[styles.swipeActions, animatedStyle]}>
-      <Pressable
-        onPress={onEdit}
-        style={[styles.swipeActionEdit, { backgroundColor: primaryColor }]}
-      >
-        <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.swipeActionText}>Editar</Text>
-      </Pressable>
-      <Pressable
-        onPress={onDelete}
-        style={[styles.swipeActionDelete, { backgroundColor: "#C0392B" }]}
-      >
-        <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-function AnimatedHistoryRow({
-  isDeleting,
-  onRemoveComplete,
-  children,
-}: {
-  isDeleting: boolean;
-  onRemoveComplete: () => void;
-  children: React.ReactNode;
-}) {
-  const opacity = useSharedValue(1);
-  const height = useSharedValue<number | null>(null);
-
-  useEffect(() => {
-    if (!isDeleting) return;
-    opacity.value = withTiming(0, { duration: 180 }, (opacityDone) => {
-      if (!opacityDone) return;
-      height.value = withTiming(0, { duration: 200 }, (heightDone) => {
-        if (heightDone) runOnJS(onRemoveComplete)();
-      });
-    });
-  }, [isDeleting]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    const style: ViewStyle = { opacity: opacity.value, overflow: "hidden" };
-    if (height.value !== null) {
-      style.height = height.value;
-    }
-    return style;
-  });
-
-  return (
-    <Animated.View
-      style={animatedStyle}
-      onLayout={(e) => {
-        const h = e.nativeEvent.layout.height;
-        if (height.value === null && h > 0) {
-          // eslint-disable-next-line react-hooks/immutability -- Reanimated shared value mutation, not React state
-          height.value = h;
-        }
-      }}
-    >
-      {children}
-    </Animated.View>
-  );
-}
 
 const ExerciseDetailScreen = () => {
-  const { id, name, weightGrams, weight, weightUnit, categoryName, imageUrl } =
-    useLocalSearchParams<{
-      id: string;
-      name?: string;
-      weightGrams?: string;
-      weight?: string;
-      weightUnit?: string;
-      categoryName?: string;
-      imageUrl?: string;
-    }>();
+  const { id, name, categoryName, imageUrl } = useLocalSearchParams<{
+    id: string;
+    name?: string;
+    weightGrams?: string;
+    weight?: string;
+    weightUnit?: string;
+    categoryName?: string;
+    imageUrl?: string;
+  }>();
   const navigation = useNavigation();
-  const queryClient = useQueryClient();
 
   const backgroundColor = useThemeColor({}, "background");
   const surfaceColor = useThemeColor({}, "surface");
@@ -165,8 +56,11 @@ const ExerciseDetailScreen = () => {
     isRefetching,
     isError,
     refetch,
-    removeMutation,
-  } = useWeightHistory(String(id));
+    removeEntry,
+  } = useWeightHistoryManager(String(id));
+
+  const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
+  const openRowIdRef = useRef<string | null>(null);
 
   const latestWeightEntry =
     [...weightHistory].sort(
@@ -176,79 +70,15 @@ const ExerciseDetailScreen = () => {
     ? `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`
     : "Sin registros";
 
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
-  const openRowIdRef = useRef<string | null>(null);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
-    imageUrl || undefined,
-  );
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
-  const { pickImage } = usePickExerciseImage();
+  const { remove, changeImage, currentImageUrl, isDeleting, isChangingImage } =
+    useExerciseActions(String(id), name, imageUrl);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets failure flag when the image URL changes
     setImageLoadFailed(false);
   }, [currentImageUrl]);
-
-  const handleEditEntry = (entry: WeightHistoryEntry) => {
-    swipeableRefs.current.get(entry.id)?.close();
-    router.navigate({
-      pathname: "/weight-entry",
-      params: {
-        exerciseId: String(id),
-        entryId: entry.id,
-        weight: entry.weight.toString(),
-        weightUnit: entry.weightUnit,
-        note: entry.note ?? "",
-        date: entry.date,
-      },
-    });
-  };
-
-  const handleDeleteEntry = (entryId: string) => {
-    Alert.alert(
-      "Eliminar registro",
-      "¿Seguro que quieres eliminar esta entrada del historial?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-          onPress: () => swipeableRefs.current.get(entryId)?.close(),
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => {
-            swipeableRefs.current.get(entryId)?.close();
-            setDeletingId(entryId);
-          },
-        },
-      ],
-    );
-  };
-
-  const showHistoryRowActionSheet = (entry: WeightHistoryEntry) => {
-    Alert.alert(
-      "Registro de peso",
-      `${entry.weight} ${entry.weightUnit} · ${new Date(entry.date).toLocaleDateString()}`,
-      [
-        {
-          text: "Editar",
-          onPress: () => handleEditEntry(entry),
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => handleDeleteEntry(entry.id),
-        },
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-      ],
-    );
-  };
 
   const openCreateWeightModal = () => {
     router.navigate({
@@ -263,48 +93,6 @@ const ExerciseDetailScreen = () => {
     });
   };
 
-  const deleteExerciseMutation = useMutation({
-    mutationFn: deleteExercise,
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      router.back();
-      Alert.alert(
-        "Ejercicio eliminado",
-        `${String(name ?? "El ejercicio")} se elimino correctamente`,
-      );
-    },
-    onError(error) {
-      Alert.alert("Error", error.message);
-    },
-  });
-
-  const updateImageMutation = useMutation({
-    mutationFn: ({
-      exerciseId,
-      image,
-    }: {
-      exerciseId: string;
-      image: PickedExerciseImage;
-    }) => updateExerciseImage(exerciseId, image),
-    onSuccess(data) {
-      if (data.imageUrl) {
-        Image.prefetch(data.imageUrl);
-      }
-      setCurrentImageUrl(data.imageUrl);
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    },
-    onError(error) {
-      Alert.alert("Error", error.message);
-    },
-  });
-
-  const handleChangeImage = async () => {
-    const image = await pickImage();
-    if (image) {
-      updateImageMutation.mutate({ exerciseId: String(id), image });
-    }
-  };
-
   const confirmDeleteExercise = useCallback(() => {
     Alert.alert(
       "Eliminar ejercicio",
@@ -315,13 +103,13 @@ const ExerciseDetailScreen = () => {
           style: "cancel",
         },
         {
-          text: deleteExerciseMutation.isPending ? "Eliminando..." : "Eliminar",
+          text: isDeleting ? "Eliminando..." : "Eliminar",
           style: "destructive",
-          onPress: () => deleteExerciseMutation.mutate(String(id)),
+          onPress: () => remove(),
         },
       ],
     );
-  }, [deleteExerciseMutation, id, name]);
+  }, [isDeleting, remove, name]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -329,24 +117,18 @@ const ExerciseDetailScreen = () => {
       headerRight: () => (
         <Pressable
           onPress={confirmDeleteExercise}
-          disabled={deleteExerciseMutation.isPending}
+          disabled={isDeleting}
           hitSlop={10}
           style={({ pressed }) => [
             styles.deleteHeaderButton,
-            { opacity: pressed || deleteExerciseMutation.isPending ? 0.75 : 1 },
+            { opacity: pressed || isDeleting ? 0.75 : 1 },
           ]}
         >
           <Ionicons name="trash-outline" size={22} color={dangerText} />
         </Pressable>
       ),
     });
-  }, [
-    confirmDeleteExercise,
-    dangerText,
-    deleteExerciseMutation.isPending,
-    name,
-    navigation,
-  ]);
+  }, [confirmDeleteExercise, dangerText, isDeleting, name, navigation]);
 
   return (
     <ScrollView
@@ -400,13 +182,13 @@ const ExerciseDetailScreen = () => {
 
         <View style={styles.changeImageWrapper}>
           <Pressable
-            onPress={handleChangeImage}
-            disabled={updateImageMutation.isPending}
+            onPress={changeImage}
+            disabled={isChangingImage}
             style={({ pressed }) => [
               styles.changeImageButton,
               {
                 backgroundColor: primarySoft,
-                opacity: pressed || updateImageMutation.isPending ? 0.7 : 1,
+                opacity: pressed || isChangingImage ? 0.7 : 1,
               },
             ]}
           >
@@ -414,9 +196,7 @@ const ExerciseDetailScreen = () => {
             <Text
               style={[styles.changeImageButtonText, { color: primaryColor }]}
             >
-              {updateImageMutation.isPending
-                ? "Actualizando..."
-                : "Cambiar imagen"}
+              {isChangingImage ? "Actualizando..." : "Cambiar imagen"}
             </Text>
           </Pressable>
         </View>
@@ -496,98 +276,20 @@ const ExerciseDetailScreen = () => {
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
             )
             .map((entry) => (
-              <AnimatedHistoryRow
+              <AnimatedHistoryRowComponent
                 key={entry.id}
-                isDeleting={deletingId === entry.id}
-                onRemoveComplete={() => {
-                  removeMutation.mutate({ entryId: entry.id });
-                  setDeletingId(null);
-                }}
-              >
-                <View style={[styles.historyRowWrapper, { borderColor }]}>
-                  <ReanimatedSwipeable
-                    ref={(el) => {
-                      if (el) swipeableRefs.current.set(entry.id, el);
-                      else swipeableRefs.current.delete(entry.id);
-                    }}
-                    friction={1}
-                    rightThreshold={40}
-                    overshootRight={false}
-                    animationOptions={{
-                      mass: 1,
-                      stiffness: 250,
-                      damping: 28,
-                      overshootClamping: true,
-                    }}
-                    onSwipeableWillOpen={() => {
-                      const openId = openRowIdRef.current;
-                      if (openId && openId !== entry.id) {
-                        swipeableRefs.current.get(openId)?.close();
-                      }
-                      openRowIdRef.current = entry.id;
-                    }}
-                    onSwipeableClose={() => {
-                      if (openRowIdRef.current === entry.id) {
-                        openRowIdRef.current = null;
-                      }
-                    }}
-                    renderRightActions={(_, drag) => (
-                      <SwipeRightActions
-                        drag={drag}
-                        primaryColor={primaryColor}
-                        onEdit={() => handleEditEntry(entry)}
-                        onDelete={() => handleDeleteEntry(entry.id)}
-                      />
-                    )}
-                  >
-                    <Pressable
-                      onLongPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        showHistoryRowActionSheet(entry);
-                      }}
-                      delayLongPress={400}
-                      accessible
-                      accessibilityLabel={`${entry.weight} ${entry.weightUnit}, ${new Date(entry.date).toLocaleDateString()}${entry.note ? `, ${entry.note}` : ""}`}
-                      accessibilityHint="Mantén presionado para editar o eliminar este registro"
-                      accessibilityActions={[
-                        { name: "edit", label: "Editar" },
-                        { name: "delete", label: "Eliminar" },
-                      ]}
-                      onAccessibilityAction={(event) => {
-                        switch (event.nativeEvent.actionName) {
-                          case "edit":
-                            handleEditEntry(entry);
-                            break;
-                          case "delete":
-                            handleDeleteEntry(entry.id);
-                            break;
-                        }
-                      }}
-                      style={[styles.historyRow, { backgroundColor }]}
-                    >
-                      <View style={styles.historyRowTop}>
-                        <Text
-                          style={[styles.historyWeight, { color: textColor }]}
-                        >
-                          {entry.weight} {entry.weightUnit}
-                        </Text>
-                        <Text
-                          style={[styles.historyDate, { color: faintText }]}
-                        >
-                          {new Date(entry.date).toLocaleDateString()}
-                        </Text>
-                      </View>
-                      {entry.note ? (
-                        <Text
-                          style={[styles.historyNote, { color: mutedText }]}
-                        >
-                          {entry.note}
-                        </Text>
-                      ) : null}
-                    </Pressable>
-                  </ReanimatedSwipeable>
-                </View>
-              </AnimatedHistoryRow>
+                entry={entry}
+                exerciseId={String(id)}
+                onRemove={removeEntry}
+                swipeableRefs={swipeableRefs}
+                openRowIdRef={openRowIdRef}
+                backgroundColor={backgroundColor}
+                borderColor={borderColor}
+                textColor={textColor}
+                faintText={faintText}
+                primaryColor={primaryColor}
+                mutedText={mutedText}
+              />
             ))}
 
         <Pressable
@@ -649,19 +351,17 @@ const ExerciseDetailScreen = () => {
         </Text>
         <Pressable
           onPress={confirmDeleteExercise}
-          disabled={deleteExerciseMutation.isPending}
+          disabled={isDeleting}
           style={({ pressed }) => [
             styles.deleteExerciseButton,
             {
               backgroundColor: dangerText,
-              opacity: pressed || deleteExerciseMutation.isPending ? 0.82 : 1,
+              opacity: pressed || isDeleting ? 0.82 : 1,
             },
           ]}
         >
           <Text style={styles.deleteExerciseButtonText}>
-            {deleteExerciseMutation.isPending
-              ? "Eliminando ejercicio..."
-              : "Eliminar ejercicio"}
+            {isDeleting ? "Eliminando ejercicio..." : "Eliminar ejercicio"}
           </Text>
         </Pressable>
       </View>
@@ -706,6 +406,11 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.extrabold,
     fontSize: 11.5,
     letterSpacing: 0.3,
+  },
+  historyRowWrapper: {
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
   },
   heroImage: {
     width: "100%",
@@ -818,66 +523,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: 13.5,
   },
-  historyRowWrapper: {
-    borderWidth: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  historyRow: {
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    gap: 4,
-    minHeight: 56,
-    justifyContent: "center",
-  },
-  historyRowTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  historyWeight: {
-    fontFamily: Fonts.bold,
-    fontSize: 16,
-  },
-  historyDate: {
-    fontFamily: Fonts.semibold,
-    fontSize: 12.5,
-  },
-  historyNote: {
-    fontFamily: Fonts.medium,
-    fontSize: 13.5,
-    lineHeight: 19,
-  },
-  swipeActions: {
-    flexDirection: "row",
-    width: 136,
-    alignSelf: "stretch",
-  },
-  swipeActionEdit: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    gap: 4,
-    paddingVertical: 8,
-  },
-  swipeActionDelete: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    gap: 4,
-    paddingVertical: 8,
-    borderTopRightRadius: 14,
-    borderBottomRightRadius: 14,
-    borderLeftWidth: 1,
-    borderLeftColor: "rgba(255,255,255,0.25)",
-  },
-  swipeActionText: {
-    color: "#FFFFFF",
-    fontFamily: Fonts.bold,
-    fontSize: 12,
-  },
+
   registerWeightButton: {
     marginTop: 2,
     borderRadius: 16,

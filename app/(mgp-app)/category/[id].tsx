@@ -1,18 +1,18 @@
-import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { deleteCategory } from "@/core/categories/actions/delete-category.action";
+import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
 import { toDisplayWeight } from "@/core/weight-history/interfaces/weight-history.interface";
-import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
-import { Fonts } from "@/presentation/theme/fonts";
+import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
+import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
-import * as Haptics from "expo-haptics";
+import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import {
   Alert,
   FlatList,
@@ -58,7 +58,7 @@ const CategoryScreen = () => {
   }, [data]);
   const exercises = useMemo<Exercise[]>(() => {
     const fromQuery = categoriesQuery.data?.find(
-      (category) => category.id === id
+      (category) => category.id === id,
     )?.exercise;
     return fromQuery ?? initialExercises;
   }, [categoriesQuery.data, id, initialExercises]);
@@ -93,7 +93,7 @@ const CategoryScreen = () => {
       router.replace("/(mgp-app)/(home)");
       Alert.alert(
         "Categoria eliminada",
-        `${String(name ?? "La categoria")} se elimino correctamente`
+        `${String(name ?? "La categoria")} se elimino correctamente`,
       );
     },
     onError(error) {
@@ -130,10 +130,10 @@ const CategoryScreen = () => {
               }
             },
           },
-        ]
+        ],
       );
     },
-    [deleteExerciseMutation]
+    [deleteExerciseMutation],
   );
 
   const confirmDeleteCategory = useCallback(() => {
@@ -150,7 +150,7 @@ const CategoryScreen = () => {
           style: "destructive",
           onPress: () => deleteCategoryMutation.mutate(String(id)),
         },
-      ]
+      ],
     );
   }, [deleteCategoryMutation, id, name]);
 
@@ -169,8 +169,8 @@ const CategoryScreen = () => {
                 opacity: hasExercises
                   ? 0.4
                   : pressed || deleteCategoryMutation.isPending
-                  ? 0.75
-                  : 1,
+                    ? 0.75
+                    : 1,
               },
             ]}
           >
@@ -206,9 +206,6 @@ const CategoryScreen = () => {
           params: {
             id: item.id ?? `${item.name}-${index}`,
             name: item.name,
-            weightGrams: String(item.weightGrams ?? ""),
-            weight: String(item.weight ?? ""),
-            weightUnit: String(item.weightUnit ?? ""),
             categoryName: String(name ?? "Categoria"),
             imageUrl: String(item.imageUrl ?? ""),
           },
@@ -224,7 +221,9 @@ const CategoryScreen = () => {
       ]}
     >
       <View style={[styles.badge, { backgroundColor, borderColor }]}>
-        <Text style={[styles.badgeText, { color: primaryColor }]}>{index + 1}</Text>
+        <Text style={[styles.badgeText, { color: primaryColor }]}>
+          {index + 1}
+        </Text>
       </View>
 
       <View style={styles.cardInfo}>
@@ -249,7 +248,10 @@ const CategoryScreen = () => {
         hitSlop={6}
         style={({ pressed }) => [
           styles.rowActionCircle,
-          { backgroundColor: dangerBg, opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1 },
+          {
+            backgroundColor: dangerBg,
+            opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1,
+          },
         ]}
       >
         <Ionicons name="trash-outline" size={15} color={dangerText} />
@@ -288,14 +290,21 @@ const CategoryScreen = () => {
           />
         }
         ListFooterComponent={
-          <View style={[styles.dangerZone, { backgroundColor: dangerBg, borderColor: dangerBorder }]}>
+          <View
+            style={[
+              styles.dangerZone,
+              { backgroundColor: dangerBg, borderColor: dangerBorder },
+            ]}
+          >
             <View style={styles.dangerZoneHeader}>
               <Ionicons name="warning-outline" size={20} color={dangerText} />
               <Text style={[styles.dangerZoneTitle, { color: dangerText }]}>
                 Zona de peligro
               </Text>
             </View>
-            <ThemedText style={[styles.dangerZoneDescription, { color: mutedText }]}>
+            <ThemedText
+              style={[styles.dangerZoneDescription, { color: mutedText }]}
+            >
               {hasExercises
                 ? "Elimina primero todos los ejercicios de esta categoria para poder eliminarla."
                 : "Si ya no necesitas esta categoria, puedes eliminarla desde aqui."}
@@ -310,8 +319,8 @@ const CategoryScreen = () => {
                   opacity: hasExercises
                     ? 0.4
                     : pressed || deleteCategoryMutation.isPending
-                    ? 0.82
-                    : 1,
+                      ? 0.82
+                      : 1,
                 },
               ]}
             >
@@ -324,7 +333,12 @@ const CategoryScreen = () => {
           </View>
         }
         ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
+          <View
+            style={[
+              styles.emptyState,
+              { backgroundColor: surfaceColor, borderColor },
+            ]}
+          >
             <ThemedText type="subtitle" style={styles.emptyTitle}>
               No hay ejercicios en esta categoria
             </ThemedText>

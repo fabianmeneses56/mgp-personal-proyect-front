@@ -1,12 +1,12 @@
 import { createWeightHistory, CreateWeightHistoryPayload } from "@/core/weight-history/actions/create-weight-history.action";
 import { deleteWeightHistory } from "@/core/weight-history/actions/delete-weight-history.action";
 import { getWeightHistory } from "@/core/weight-history/actions/get-weight-history.action";
-import { updateWeightHistory, UpdateWeightHistoryPayload } from "@/core/weight-history/actions/update-weight-history.action";
+import { updateWeightHistory } from "@/core/weight-history/actions/update-weight-history.action";
 import { toDisplayWeight, toKg, WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 
-export const useWeightHistory = (exerciseId: string) => {
+export const useWeightHistoryManager = (exerciseId: string) => {
   const queryClient = useQueryClient();
 
   const { data: weightHistory = [], isLoading, isRefetching, isError, refetch } = useQuery({
@@ -34,7 +34,7 @@ export const useWeightHistory = (exerciseId: string) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ entryId, payload }: { entryId: string; payload: UpdateWeightHistoryPayload }) =>
+    mutationFn: ({ entryId, payload }: { entryId: string; payload: CreateWeightHistoryPayload }) =>
       updateWeightHistory(exerciseId, entryId, payload),
     onSuccess: invalidate,
     onError: (error: Error) => Alert.alert("Error", error.message),
@@ -47,5 +47,21 @@ export const useWeightHistory = (exerciseId: string) => {
     onError: (error: Error) => Alert.alert("Error", error.message),
   });
 
-  return { weightHistory, isLoading, isRefetching, isError, refetch, createMutation, updateMutation, removeMutation };
+  const saveEntry = (payload: CreateWeightHistoryPayload, entryId?: string) =>
+    entryId
+      ? updateMutation.mutateAsync({ entryId, payload })
+      : createMutation.mutateAsync(payload);
+
+  const removeEntry = (entryId: string) => removeMutation.mutate({ entryId });
+
+  return {
+    weightHistory,
+    isLoading,
+    isRefetching,
+    isError,
+    refetch,
+    saveEntry,
+    isSaving: createMutation.isPending || updateMutation.isPending,
+    removeEntry,
+  };
 };

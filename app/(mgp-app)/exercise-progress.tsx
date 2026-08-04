@@ -2,7 +2,7 @@ import { WeightProgressChart } from "@/presentation/weight-history/components/We
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
-import { useWeightHistory } from "@/presentation/weight-history/hooks/useWeightHistory";
+import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -20,7 +20,7 @@ const ExerciseProgressScreen = () => {
   const mutedText = useThemeColor({}, "textMuted");
   const primaryColor = useThemeColor({}, "primary");
 
-  const { weightHistory, isLoading, isError, refetch } = useWeightHistory(
+  const { weightHistory, isLoading, isError, refetch } = useWeightHistoryManager(
     String(exerciseId),
   );
 
