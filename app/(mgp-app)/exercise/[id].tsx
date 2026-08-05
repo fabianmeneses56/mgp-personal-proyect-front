@@ -1,5 +1,5 @@
-import AnimatedHistoryRowComponent from "@/presentation/exercises/components/AnimatedHistoryRowComponent";
 import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
+import WeightHistory from "@/presentation/exercises/components/WeightHistory";
 import { useExerciseActions } from "@/presentation/exercises/hooks/useExerciseActions";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
@@ -9,13 +9,7 @@ import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/use
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -49,20 +43,13 @@ const ExerciseDetailScreen = () => {
 
   const {
     weightHistory,
+    latestWeightEntry,
     isLoading,
     isRefetching,
     isError,
     refetch,
-    removeEntry,
   } = useWeightHistoryManager(String(id));
 
-  const swipeableRefs = useRef<Map<string, { close: () => void }>>(new Map());
-  const openRowIdRef = useRef<string | null>(null);
-
-  const latestWeightEntry =
-    [...weightHistory].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    )[0] ?? null;
   const displayWeight = latestWeightEntry
     ? `${latestWeightEntry.weight} ${latestWeightEntry.weightUnit}`
     : "Sin registros";
@@ -76,19 +63,6 @@ const ExerciseDetailScreen = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets failure flag when the image URL changes
     setImageLoadFailed(false);
   }, [currentImageUrl]);
-
-  const openCreateWeightModal = () => {
-    router.navigate({
-      pathname: "/weight-entry",
-      params: {
-        exerciseId: String(id),
-        ...(latestWeightEntry && {
-          weight: latestWeightEntry.weight.toString(),
-          weightUnit: latestWeightEntry.weightUnit,
-        }),
-      },
-    });
-  };
 
   const confirmDeleteExercise = useCallback(() => {
     Alert.alert(
@@ -224,83 +198,7 @@ const ExerciseDetailScreen = () => {
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.historyCard,
-          { backgroundColor: surfaceColor, borderColor },
-        ]}
-      >
-        <ThemedText type="subtitle" style={styles.historyTitle}>
-          Historico de pesos
-        </ThemedText>
-
-        {isLoading ? (
-          [0, 1, 2].map((i) => (
-            <View
-              key={i}
-              style={[
-                styles.historyRowWrapper,
-                {
-                  borderColor,
-                  backgroundColor: borderColor,
-                  height: 56,
-                  borderRadius: 14,
-                },
-              ]}
-            />
-          ))
-        ) : isError ? (
-          <View style={styles.historyErrorState}>
-            <Text style={[styles.emptyHistory, { color: faintText }]}>
-              No pudimos cargar el historial.
-            </Text>
-            <Pressable onPress={() => refetch()} hitSlop={8}>
-              <Text style={[styles.retryText, { color: primaryColor }]}>
-                Reintentar
-              </Text>
-            </Pressable>
-          </View>
-        ) : weightHistory.length === 0 ? (
-          <Text style={[styles.emptyHistory, { color: faintText }]}>
-            Sin registros de peso
-          </Text>
-        ) : null}
-
-        {!isLoading &&
-          !isError &&
-          [...weightHistory]
-            .sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-            )
-            .map((entry) => (
-              <AnimatedHistoryRowComponent
-                key={entry.id}
-                entry={entry}
-                exerciseId={String(id)}
-                onRemove={removeEntry}
-                swipeableRefs={swipeableRefs}
-                openRowIdRef={openRowIdRef}
-                backgroundColor={backgroundColor}
-                borderColor={borderColor}
-                textColor={textColor}
-                faintText={faintText}
-                primaryColor={primaryColor}
-                mutedText={mutedText}
-              />
-            ))}
-
-        <Pressable
-          onPress={openCreateWeightModal}
-          style={({ pressed }) => [
-            styles.registerWeightButton,
-            { backgroundColor: primaryColor, opacity: pressed ? 0.85 : 1 },
-          ]}
-        >
-          <Text style={styles.registerWeightButtonText}>
-            Registrar nuevo peso
-          </Text>
-        </Pressable>
-      </View>
+      <WeightHistory exerciseId={String(id)} />
 
       {!isLoading && !isError && weightHistory.length >= 2 ? (
         <Pressable
@@ -404,11 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     letterSpacing: 0.3,
   },
-  historyRowWrapper: {
-    borderWidth: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
+
   heroImage: {
     width: "100%",
     height: 165,
@@ -496,43 +390,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: 12.5,
   },
-  historyCard: {
-    borderWidth: 1,
-    borderRadius: 22,
-    padding: 19,
-    gap: 12,
-  },
-  historyTitle: {
-    marginBottom: 2,
-  },
-  emptyHistory: {
-    fontSize: 13.5,
-    fontFamily: Fonts.semibold,
-    textAlign: "center",
-    paddingVertical: 8,
-  },
-  historyErrorState: {
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 4,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 13.5,
-  },
 
-  registerWeightButton: {
-    marginTop: 2,
-    borderRadius: 16,
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  registerWeightButtonText: {
-    color: "#FFFFFF",
-    fontFamily: Fonts.bold,
-    fontSize: 15,
-  },
   dangerZone: {
     borderWidth: 1,
     borderRadius: 26,

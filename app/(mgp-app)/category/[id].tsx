@@ -1,15 +1,14 @@
 import { deleteCategory } from "@/core/categories/actions/delete-category.action";
 import { Exercise } from "@/core/categories/interfaces/category.interface";
-import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
-import { toDisplayWeight } from "@/core/weight-history/interfaces/weight-history.interface";
+import RenderExerciseCard from "@/presentation/categories/components/RenderExerciseCard";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
+import { useDeleteExercise } from "@/presentation/exercises/hooks/useDeleteExercise";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
@@ -21,7 +20,6 @@ import {
   StyleSheet,
   Text,
   View,
-  type ListRenderItem,
 } from "react-native";
 
 const CategoryScreen = () => {
@@ -33,15 +31,14 @@ const CategoryScreen = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { categoriesQuery } = useCategories();
+  const { remove: removeExercise, isDeleting: isDeletingExercise } =
+    useDeleteExercise();
 
   const backgroundColor = useThemeColor({}, "background");
   const surfaceColor = useThemeColor({}, "surface");
   const borderColor = useThemeColor({}, "surfaceBorder");
   const primaryColor = useThemeColor({}, "primary");
-  const primarySoft = useThemeColor({}, "primarySoft");
   const mutedText = useThemeColor({}, "textMuted");
-  const faintText = useThemeColor({}, "textFaint");
-  const textColor = useThemeColor({}, "text");
   const dangerBg = useThemeColor({}, "dangerBg");
   const dangerBorder = useThemeColor({}, "dangerBorder");
   const dangerText = useThemeColor({}, "danger");
@@ -73,19 +70,6 @@ const CategoryScreen = () => {
     }
   }, [exercises]);
 
-  const getExerciseWeightLabel = (exercise: Exercise) => {
-    if (exercise.weight !== undefined) {
-      return `${exercise.weight} ${exercise.weightUnit ?? "kg"}`;
-    }
-
-    if (exercise.weightGrams !== undefined) {
-      const unit = exercise.weightUnit ?? "kg";
-      return `${toDisplayWeight(exercise.weightGrams, unit)} ${unit}`;
-    }
-
-    return "0 kg";
-  };
-
   const deleteCategoryMutation = useMutation({
     mutationFn: deleteCategory,
     onSuccess() {
@@ -100,41 +84,6 @@ const CategoryScreen = () => {
       Alert.alert("Error", error.message);
     },
   });
-
-  const deleteExerciseMutation = useMutation({
-    mutationFn: deleteExercise,
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    },
-    onError(error) {
-      Alert.alert("Error", error.message);
-    },
-  });
-
-  const confirmDeleteExercise = useCallback(
-    (exercise: Exercise) => {
-      Alert.alert(
-        "Eliminar ejercicio",
-        `Se eliminara ${exercise.name} y ya no aparecera en tu lista.`,
-        [
-          {
-            text: "Cancelar",
-            style: "cancel",
-          },
-          {
-            text: "Eliminar",
-            style: "destructive",
-            onPress: () => {
-              if (exercise.id) {
-                deleteExerciseMutation.mutate(exercise.id);
-              }
-            },
-          },
-        ],
-      );
-    },
-    [deleteExerciseMutation],
-  );
 
   const confirmDeleteCategory = useCallback(() => {
     Alert.alert(
@@ -153,6 +102,31 @@ const CategoryScreen = () => {
       ],
     );
   }, [deleteCategoryMutation, id, name]);
+
+  const confirmDeleteExercise = useCallback(
+    (exercise: Exercise) => {
+      Alert.alert(
+        "Eliminar ejercicio",
+        `Se eliminara ${exercise.name} y ya no aparecera en tu lista.`,
+        [
+          {
+            text: "Cancelar",
+            style: "cancel",
+          },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: () => {
+              if (exercise.id) {
+                removeExercise(exercise.id);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [removeExercise],
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -197,72 +171,6 @@ const CategoryScreen = () => {
     navigation,
   ]);
 
-  const renderExerciseCard: ListRenderItem<Exercise> = ({ item, index }) => (
-    <Pressable
-      onPress={() => {
-        Haptics.selectionAsync();
-        router.push({
-          pathname: "/exercise/[id]",
-          params: {
-            id: item.id ?? `${item.name}-${index}`,
-            name: item.name,
-            categoryName: String(name ?? "Categoria"),
-            imageUrl: String(item.imageUrl ?? ""),
-          },
-        });
-      }}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: surfaceColor,
-          borderColor,
-          opacity: pressed ? 0.75 : 1,
-        },
-      ]}
-    >
-      <View style={[styles.badge, { backgroundColor, borderColor }]}>
-        <Text style={[styles.badgeText, { color: primaryColor }]}>
-          {index + 1}
-        </Text>
-      </View>
-
-      <View style={styles.cardInfo}>
-        <ThemedText
-          type="defaultSemiBold"
-          style={styles.exerciseName}
-          numberOfLines={1}
-        >
-          {item.name}
-        </ThemedText>
-        <View style={styles.metaRow}>
-          <Text style={[styles.metaLabel, { color: faintText }]}>Peso</Text>
-          <Text style={[styles.metaValue, { color: textColor }]}>
-            {getExerciseWeightLabel(item)}
-          </Text>
-        </View>
-      </View>
-
-      <Pressable
-        onPress={() => confirmDeleteExercise(item)}
-        disabled={deleteExerciseMutation.isPending}
-        hitSlop={6}
-        style={({ pressed }) => [
-          styles.rowActionCircle,
-          {
-            backgroundColor: dangerBg,
-            opacity: pressed || deleteExerciseMutation.isPending ? 0.6 : 1,
-          },
-        ]}
-      >
-        <Ionicons name="trash-outline" size={15} color={dangerText} />
-      </Pressable>
-
-      <View style={[styles.rowActionCircle, { backgroundColor: primarySoft }]}>
-        <Ionicons name="chevron-forward" size={16} color={primaryColor} />
-      </View>
-    </Pressable>
-  );
-
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
@@ -277,7 +185,15 @@ const CategoryScreen = () => {
       <FlatList
         data={exercises}
         keyExtractor={(item, index) => item.id ?? `${item.name}-${index}`}
-        renderItem={renderExerciseCard}
+        renderItem={({ item, index }) => (
+          <RenderExerciseCard
+            item={item}
+            index={index}
+            categoryName={String(name ?? "Categoria")}
+            onDelete={confirmDeleteExercise}
+            isDeleting={isDeletingExercise}
+          />
+        )}
         contentContainerStyle={[
           styles.listContent,
           exercises.length === 0 && styles.emptyListContent,
@@ -390,56 +306,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
   },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 15,
-  },
-  badge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontWeight: "800",
-    fontSize: 15,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 17,
-    letterSpacing: -0.2,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 3,
-  },
-  metaLabel: {
-    fontFamily: Fonts.bold,
-    fontSize: 10.5,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  metaValue: {
-    fontFamily: Fonts.extrabold,
-    fontSize: 14,
-  },
-  rowActionCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+
   emptyState: {
     borderWidth: 1,
     borderRadius: 26,

@@ -1,5 +1,6 @@
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Fonts } from "@/presentation/theme/fonts";
+import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -119,25 +120,20 @@ const AnimatedHistoryRowComponent = ({
   onRemove,
   swipeableRefs,
   openRowIdRef,
-  backgroundColor,
-  borderColor,
-  textColor,
-  faintText,
-  primaryColor,
-  mutedText,
 }: {
   entry: WeightHistoryEntry;
   exerciseId: string;
   onRemove: (entryId: string) => void;
   swipeableRefs: React.RefObject<Map<string, { close: () => void }>>;
   openRowIdRef: React.RefObject<string | null>;
-  backgroundColor: string;
-  borderColor: string;
-  textColor: string;
-  faintText: string;
-  primaryColor: string;
-  mutedText: string;
 }) => {
+  const backgroundColor = useThemeColor({}, "background");
+  const borderColor = useThemeColor({}, "surfaceBorder");
+  const textColor = useThemeColor({}, "text");
+  const faintText = useThemeColor({}, "textFaint");
+  const primaryColor = useThemeColor({}, "primary");
+  const mutedText = useThemeColor({}, "textMuted");
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleEditEntry = (entry: WeightHistoryEntry) => {
