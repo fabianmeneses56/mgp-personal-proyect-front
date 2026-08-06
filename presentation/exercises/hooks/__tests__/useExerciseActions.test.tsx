@@ -45,10 +45,10 @@ describe("useExerciseActions.remove", () => {
       { wrapper: createQueryWrapper() },
     );
 
-    await act(async () => {
+    await act(() => {
       result.current.remove();
-      await waitFor(() => expect(mockedAlert).toHaveBeenCalled());
     });
+    await waitFor(() => expect(mockedAlert).toHaveBeenCalled());
 
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["categories"] });
     expect(mockedRouterBack).toHaveBeenCalled();
@@ -70,15 +70,15 @@ describe("useExerciseActions.remove", () => {
       { wrapper: createQueryWrapper() },
     );
 
-    await act(async () => {
+    await act(() => {
       result.current.remove();
-      await waitFor(() =>
-        expect(mockedAlert).toHaveBeenCalledWith(
-          "Error",
-          "Error al eliminar el ejercicio",
-        ),
-      );
     });
+    await waitFor(() =>
+      expect(mockedAlert).toHaveBeenCalledWith(
+        "Error",
+        "Error al eliminar el ejercicio",
+      ),
+    );
 
     expect(mockedRouterBack).not.toHaveBeenCalled();
   });
