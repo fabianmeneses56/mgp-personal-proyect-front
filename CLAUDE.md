@@ -18,9 +18,20 @@ npm run android        # expo run:android
 npm run web            # expo start --web
 npm run lint           # expo lint (eslint-config-expo flat config)
 npm run reset-project  # moves starter app/ to app-example/ and creates a blank app/ (do not run unless asked)
+npm test                # jest (jest-expo preset) — runs the full suite once
+npm run test:watch      # jest --watch
+npm run test:coverage   # jest --coverage
 ```
 
-There is no test runner configured in this project.
+Tests live in `__tests__/` folders next to the code they cover (e.g.
+`core/auth/actions/__tests__/auth-actions.test.ts`), plus a root `test-utils/`
+for shared fixtures (`test-utils/fixtures.ts`) and the React Query test wrapper
+(`test-utils/query-wrapper.tsx`). `core/*/actions` tests mock the shared axios
+instance with `jest.mock("@/core/api/mgpApi", () => ({ mgpApi: { get: jest.fn(), ... } }))`
+and assert against the mocked method; `core/api/__tests__/mgpApi.test.ts` is the
+one exception, using `axios-mock-adapter` against the real instance to exercise
+its request/response interceptors. Global mocks (`expo-secure-store`,
+`expo-router`, `Alert.alert`) live in `jest.setup.ts`.
 
 ## Environment
 

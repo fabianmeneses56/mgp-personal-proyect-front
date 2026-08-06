@@ -10,7 +10,10 @@
     "ios": "expo run:ios",
     "ios:prod-api": "node ./scripts/start-with-env.js .env.production run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@expo-google-fonts/hanken-grotesk": "^0.4.3",
@@ -49,9 +52,15 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.10",
+    "axios-mock-adapter": "^2.1.0",
+    "babel-plugin-dynamic-import-node": "^2.3.3",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~57.0.1",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.3",
     "typescript": "~6.0.3"
   },
   "private": true
