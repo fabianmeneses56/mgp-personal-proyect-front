@@ -1,9 +1,10 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, router } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, AppState, View } from "react-native";
 
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
+import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
@@ -90,9 +91,11 @@ const CheckAuthenticationLayout = () => {
           options={{
             title: "Categorias",
             headerLeft: () => <LogoutIconButton />,
-            // headerRight: () => (
-            //   <AddNewButton onPressAction={() => setModalVisible(true)} />
-            // ),
+            headerRight: () => (
+              <AddNewButton
+                onPressAction={() => router.navigate("/new-category")}
+              />
+            ),
           }}
         />
 
