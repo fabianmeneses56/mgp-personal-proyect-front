@@ -1,6 +1,6 @@
 # Spec 06 — Gráfica de progreso de pesos
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:**
   - Spec `01-historico-pesos-ejercicio.md` / `03-integracion-historico-pesos-backend.md` — el historial de pesos por ejercicio ya existe y se consume vía `useWeightHistory`
 - **Fecha:** 2026-07-22

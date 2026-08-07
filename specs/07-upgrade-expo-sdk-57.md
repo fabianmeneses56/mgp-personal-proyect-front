@@ -1,6 +1,6 @@
 # Spec 07 — Upgrade a Expo SDK 57
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:** Ninguna spec previa — afecta la base sobre la que corren todas.
 - **Fecha:** 2026-07-30
 
