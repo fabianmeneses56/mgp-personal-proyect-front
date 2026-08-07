@@ -1,6 +1,6 @@
 # Spec 08 — Infraestructura de tests y primera batería
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:**
   - Ninguna spec previa la bloquea. Cubre el código introducido por las specs 01–07
     (auth, categorías, ejercicios, histórico de pesos) tal como está hoy.

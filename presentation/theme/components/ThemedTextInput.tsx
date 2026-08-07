@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  Pressable,
   StyleProp,
   StyleSheet,
   TextInput,
@@ -14,9 +15,16 @@ import { useThemeColor } from "../hooks/use-theme-color";
 
 interface Props extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
+
+  secureToggle?: boolean;
 }
 
-const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
+const ThemedTextInput = ({
+  icon,
+  style,
+  secureToggle = false,
+  ...rest
+}: Props) => {
   const primaryColor = useThemeColor({}, "primary");
   const textColor = useThemeColor({}, "text");
   const surfaceColor = useThemeColor({}, "surface");
@@ -24,6 +32,7 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
   const placeholderColor = useThemeColor({}, "textFaint");
 
   const [isActive, setIsActive] = useState(false);
+  const [isSecure, setIsSecure] = useState(true);
   const inputRef = useRef<TextInput>(null);
 
   return (
@@ -61,7 +70,24 @@ const ThemedTextInput = ({ icon, style, ...rest }: Props) => {
           flex: 1,
         }}
         {...rest}
+        secureTextEntry={secureToggle ? isSecure : rest.secureTextEntry}
       />
+
+      {secureToggle && (
+        <Pressable
+          onPress={() => setIsSecure((prev) => !prev)}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isSecure ? "Mostrar contraseña" : "Ocultar contraseña"
+          }
+        >
+          <Ionicons
+            name={isSecure ? "eye-outline" : "eye-off-outline"}
+            size={20}
+            color={isSecure ? placeholderColor : primaryColor}
+          />
+        </Pressable>
+      )}
     </View>
   );
 };

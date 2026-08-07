@@ -79,6 +79,7 @@ const LoginScreen = () => {
             <ThemedTextInput
               placeholder="Contraseña"
               secureTextEntry
+              secureToggle
               autoCapitalize="none"
               icon="lock-closed-outline"
               value={form.password}
