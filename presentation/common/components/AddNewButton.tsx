@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable } from "react-native";
 
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
@@ -12,16 +11,9 @@ const AddNewButton = ({ onPressAction }: props) => {
   const primaryColor = useThemeColor({}, "primary");
   return (
     <Pressable hitSlop={12} onPress={onPressAction}>
-      <Ionicons
-        name="add"
-        size={24}
-        color={primaryColor}
-        style={{ transform: [{ translateX: 6 }] }}
-      />
+      <Ionicons name="add" size={24} color={primaryColor} />
     </Pressable>
   );
 };
 
 export default AddNewButton;
-
-// const styles = StyleSheet.create({});

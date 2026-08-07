@@ -1,4 +1,3 @@
-import React, { useLayoutEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,15 +11,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
-import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { Fonts } from "@/presentation/theme/fonts";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 
 const HomeScreen = () => {
   const { categoriesQuery } = useCategories();
-  const navigation = useNavigation();
 
   const surfaceColor = useThemeColor({}, "surface");
   const borderColor = useThemeColor({}, "surfaceBorder");
@@ -30,14 +27,6 @@ const HomeScreen = () => {
   const primarySoft = useThemeColor({}, "primarySoft");
   const mutedText = useThemeColor({}, "textMuted");
   const faintText = useThemeColor({}, "textFaint");
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <AddNewButton onPressAction={() => router.navigate("/new-category")} />
-      ),
-    });
-  }, [navigation]);
 
   if (categoriesQuery.isLoading) {
     return (
