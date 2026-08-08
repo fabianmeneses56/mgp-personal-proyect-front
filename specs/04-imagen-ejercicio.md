@@ -1,6 +1,6 @@
 # Spec 04 — Imagen del ejercicio (subida y edición)
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:**
   - Backend spec `02-cloudflare-r2-image-upload.md` — `POST /exercises` y `PATCH /exercises/:id` ya aceptan `multipart/form-data` con campo `image` y devuelven `imageUrl` con URL pública de R2
   - Spec 03 (`03-integracion-historico-pesos-backend.md`) — patrón de mutaciones/React Query ya establecido en `exercise/[id].tsx`

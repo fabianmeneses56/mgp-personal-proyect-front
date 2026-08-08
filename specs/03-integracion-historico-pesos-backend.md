@@ -1,6 +1,6 @@
 # Spec 03 — Integración del histórico de pesos con el backend
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:**
   - Spec 01 (`01-historico-pesos-ejercicio.md`) — histórico implementado en memoria
   - Spec 02 (`02-editar-eliminar-historico-pesos.md`) — edición/eliminación implementados en memoria

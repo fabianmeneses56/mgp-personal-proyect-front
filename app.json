@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fabianmeneses56.mgp-personal-proyect-front"
+      "bundleIdentifier": "com.fabianmeneses56.mgp-personal-proyect-front",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -57,6 +60,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "89fafe93-97f5-4abd-a8cb-1d20acff913f"
+      }
     }
   }
 }

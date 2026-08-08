@@ -1,6 +1,6 @@
 # Spec 02 — Edición y eliminación de entradas del histórico de pesos
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:** Spec 01 (`01-historico-pesos-ejercicio.md`) — requiere el histórico de pesos ya implementado en `app/(mgp-app)/exercise/[id].tsx`
 - **Fecha:** 2026-06-25
 
