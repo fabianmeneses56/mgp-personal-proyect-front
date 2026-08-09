@@ -1,0 +1,12 @@
+name: Build iOS preview on merge to main
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  build_ios_preview:
+    type: build
+    params:
+      platform: ios
+      profile: preview
