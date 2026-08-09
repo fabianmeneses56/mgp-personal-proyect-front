@@ -1,6 +1,6 @@
 # Spec 11 — Alertas centralizadas en `alert.service`
 
-- **Estado:** Approved
+- **Estado:** Implemented
 - **Dependencias:**
   - Spec `09-errores-login-diferenciados.md` (Approved) — está en curso ahora mismo
     (hay cambios sin commitear en `app/auth/login/index.tsx` y
