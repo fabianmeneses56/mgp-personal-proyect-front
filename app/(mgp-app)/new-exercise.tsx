@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createExercise } from "@/core/exercises/actions/create-exercise.action";
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { usePickExerciseImage } from "@/presentation/exercises/hooks/usePickExerciseImage";
 import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
@@ -49,16 +50,16 @@ const NewExerciseScreen = () => {
       }
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       router.back();
-      Alert.alert("Ejercicio guardado", `${data.name} se creo correctamente`);
+      showAlert("Ejercicio guardado", `${data.name} se creo correctamente`);
     },
     onError(error) {
-      Alert.alert("Error", error.message);
+      showAlert("Error", error.message);
     },
   });
 
   const handleCreateExercise = () => {
     if (!exerciseName.trim()) {
-      Alert.alert("Campo requerido", "Ingresa el nombre del ejercicio.");
+      showAlert("Campo requerido", "Ingresa el nombre del ejercicio.");
       return;
     }
 
@@ -66,7 +67,7 @@ const NewExerciseScreen = () => {
     const parsedWeight = Number(normalizedWeight);
 
     if (!normalizedWeight || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
-      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
+      showAlert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
       return;
     }
 

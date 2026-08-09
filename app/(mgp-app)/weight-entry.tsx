@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Keyboard, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -7,6 +7,7 @@ import DateTimePicker, {
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
@@ -70,7 +71,7 @@ const WeightEntryScreen = () => {
     const parsedWeight = Number(normalizedWeight);
 
     if (!normalizedWeight || Number.isNaN(parsedWeight) || parsedWeight <= 0) {
-      Alert.alert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
+      showAlert("Peso invalido", "Ingresa un peso numerico mayor a 0.");
       return;
     }
 

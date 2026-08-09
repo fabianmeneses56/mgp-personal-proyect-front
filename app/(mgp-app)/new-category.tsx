@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Category } from "@/core/categories/interfaces/category.interface";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { useCategory } from "@/presentation/categories/hooks/useCategory";
 import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
@@ -24,7 +25,7 @@ const NewCategoryScreen = () => {
     const trimmedName = formValue.trim();
 
     if (!trimmedName) {
-      Alert.alert("Campo requerido", "Ingresa el nombre de la categoria.");
+      showAlert("Campo requerido", "Ingresa el nombre de la categoria.");
       return;
     }
 
@@ -38,7 +39,7 @@ const NewCategoryScreen = () => {
     );
 
     if (isDuplicate) {
-      Alert.alert(
+      showAlert(
         "Nombre duplicado",
         "Ya existe una categoria con ese nombre."
       );
@@ -53,7 +54,7 @@ const NewCategoryScreen = () => {
       });
       router.back();
     } catch (error) {
-      Alert.alert(
+      showAlert(
         "Error",
         error instanceof Error
           ? error.message

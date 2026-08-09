@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { Alert } from "react-native";
+import { showAlert } from "@/helpers/alerts/alert.service";
 
 export class SecureStorageAdapter {
   private static cache = new Map<string, string | null>();
@@ -11,7 +11,7 @@ export class SecureStorageAdapter {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
       this.cache.delete(key);
-      Alert.alert("Error", "Failed to save data");
+      showAlert("Error", "Failed to save data");
     }
   }
 
@@ -26,7 +26,7 @@ export class SecureStorageAdapter {
 
       return value;
     } catch (error) {
-      Alert.alert("Error", "Failed to get data");
+      showAlert("Error", "Failed to get data");
       return null;
     }
   }
@@ -37,7 +37,7 @@ export class SecureStorageAdapter {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      Alert.alert("Error", "Failed to delete data");
+      showAlert("Error", "Failed to delete data");
     }
   }
 }

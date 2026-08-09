@@ -1,6 +1,6 @@
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 // iOS camera photos default to HEIC/HEIF. expo-image-picker transcodes them to
@@ -24,7 +24,7 @@ export const usePickExerciseImage = () => {
   const pickImage = async (): Promise<PickedExerciseImage | null> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(
+      showAlert(
         "Permiso requerido",
         "Debes habilitar el acceso a tus fotos desde la configuración del dispositivo para seleccionar una imagen."
       );
@@ -45,12 +45,12 @@ export const usePickExerciseImage = () => {
     const mimeType = isHeic ? "image/jpeg" : rawMimeType;
 
     if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
-      Alert.alert("Formato no soportado", "Selecciona una imagen en formato JPEG, PNG o WEBP.");
+      showAlert("Formato no soportado", "Selecciona una imagen en formato JPEG, PNG o WEBP.");
       return null;
     }
 
     if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_BYTES) {
-      Alert.alert("Imagen demasiado grande", "La imagen debe pesar 5MB o menos.");
+      showAlert("Imagen demasiado grande", "La imagen debe pesar 5MB o menos.");
       return null;
     }
 
