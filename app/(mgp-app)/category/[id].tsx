@@ -13,7 +13,6 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import {
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -21,6 +20,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { showAlert, showConfirm } from "@/helpers/alerts/alert.service";
 
 const CategoryScreen = () => {
   const { id, data, name } = useLocalSearchParams<{
@@ -75,55 +75,39 @@ const CategoryScreen = () => {
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       router.replace("/(mgp-app)/(home)");
-      Alert.alert(
+      showAlert(
         "Categoria eliminada",
         `${String(name ?? "La categoria")} se elimino correctamente`,
       );
     },
     onError(error) {
-      Alert.alert("Error", error.message);
+      showAlert("Error", error.message);
     },
   });
 
   const confirmDeleteCategory = useCallback(() => {
-    Alert.alert(
-      "Eliminar categoria",
-      `Se eliminara ${String(name ?? "esta categoria")} y ya no aparecera en tu lista.`,
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: deleteCategoryMutation.isPending ? "Eliminando..." : "Eliminar",
-          style: "destructive",
-          onPress: () => deleteCategoryMutation.mutate(String(id)),
-        },
-      ],
-    );
+    showConfirm({
+      title: "Eliminar categoria",
+      message: `Se eliminara ${String(name ?? "esta categoria")} y ya no aparecera en tu lista.`,
+      confirmText: deleteCategoryMutation.isPending ? "Eliminando..." : "Eliminar",
+      destructive: true,
+      onConfirm: () => deleteCategoryMutation.mutate(String(id)),
+    });
   }, [deleteCategoryMutation, id, name]);
 
   const confirmDeleteExercise = useCallback(
     (exercise: Exercise) => {
-      Alert.alert(
-        "Eliminar ejercicio",
-        `Se eliminara ${exercise.name} y ya no aparecera en tu lista.`,
-        [
-          {
-            text: "Cancelar",
-            style: "cancel",
-          },
-          {
-            text: "Eliminar",
-            style: "destructive",
-            onPress: () => {
-              if (exercise.id) {
-                removeExercise(exercise.id);
-              }
-            },
-          },
-        ],
-      );
+      showConfirm({
+        title: "Eliminar ejercicio",
+        message: `Se eliminara ${exercise.name} y ya no aparecera en tu lista.`,
+        confirmText: "Eliminar",
+        destructive: true,
+        onConfirm: () => {
+          if (exercise.id) {
+            removeExercise(exercise.id);
+          }
+        },
+      });
     },
     [removeExercise],
   );

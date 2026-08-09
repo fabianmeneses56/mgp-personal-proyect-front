@@ -1,6 +1,6 @@
 import { deleteExercise } from "@/core/exercises/actions/delete-exercise.action";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "react-native";
 
 export const useDeleteExercise = () => {
   const queryClient = useQueryClient();
@@ -11,7 +11,7 @@ export const useDeleteExercise = () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
     onError(error) {
-      Alert.alert("Error", error.message);
+      showAlert("Error", error.message);
     },
   });
 

@@ -1,7 +1,7 @@
 import { updateCreateCategory } from "@/core/categories/actions/create-update-category.action";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
-import { Alert } from "react-native";
 import { Category } from "../../../core/categories/interfaces/category.interface";
 
 export const useCategory = (categoryId: string) => {
@@ -21,7 +21,7 @@ export const useCategory = (categoryId: string) => {
         queryKey: ["categories"],
       });
 
-      Alert.alert("Categoria guardada", `${data.name} se guardo correctamente`);
+      showAlert("Categoria guardada", `${data.name} se guardo correctamente`);
     },
   });
 

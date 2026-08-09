@@ -3,8 +3,8 @@ import { deleteWeightHistory } from "@/core/weight-history/actions/delete-weight
 import { getWeightHistory } from "@/core/weight-history/actions/get-weight-history.action";
 import { updateWeightHistory } from "@/core/weight-history/actions/update-weight-history.action";
 import { toDisplayWeight, toKg, WeightHistoryApiEntry, WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
+import { showAlert } from "@/helpers/alerts/alert.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "react-native";
 
 // Definido a nivel de modulo a proposito: React Query solo reusa el resultado
 // cacheado del select si la funcion mantiene su identidad entre renders.
@@ -39,21 +39,21 @@ export const useWeightHistoryManager = (exerciseId: string) => {
     mutationFn: (payload: CreateWeightHistoryPayload) =>
       createWeightHistory(exerciseId, payload),
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert("Error", error.message),
+    onError: (error: Error) => showAlert("Error", error.message),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ entryId, payload }: { entryId: string; payload: CreateWeightHistoryPayload }) =>
       updateWeightHistory(exerciseId, entryId, payload),
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert("Error", error.message),
+    onError: (error: Error) => showAlert("Error", error.message),
   });
 
   const removeMutation = useMutation({
     mutationFn: ({ entryId }: { entryId: string }) =>
       deleteWeightHistory(exerciseId, entryId),
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert("Error", error.message),
+    onError: (error: Error) => showAlert("Error", error.message),
   });
 
   const saveEntry = (payload: CreateWeightHistoryPayload, entryId?: string) =>

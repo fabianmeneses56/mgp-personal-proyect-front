@@ -11,7 +11,6 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -19,6 +18,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { showConfirm } from "@/helpers/alerts/alert.service";
 
 const ExerciseDetailScreen = () => {
   const { id, name, categoryName, imageUrl } = useLocalSearchParams<{
@@ -65,21 +65,13 @@ const ExerciseDetailScreen = () => {
   }, [currentImageUrl]);
 
   const confirmDeleteExercise = useCallback(() => {
-    Alert.alert(
-      "Eliminar ejercicio",
-      `Se eliminara ${String(name ?? "este ejercicio")} y ya no aparecera en tu lista.`,
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: isDeleting ? "Eliminando..." : "Eliminar",
-          style: "destructive",
-          onPress: () => remove(),
-        },
-      ],
-    );
+    showConfirm({
+      title: "Eliminar ejercicio",
+      message: `Se eliminara ${String(name ?? "este ejercicio")} y ya no aparecera en tu lista.`,
+      confirmText: isDeleting ? "Eliminando..." : "Eliminar",
+      destructive: true,
+      onConfirm: () => remove(),
+    });
   }, [isDeleting, remove, name]);
 
   useLayoutEffect(() => {

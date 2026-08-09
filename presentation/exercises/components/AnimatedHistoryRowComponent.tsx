@@ -1,4 +1,5 @@
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
+import { showConfirm, showOptions } from "@/helpers/alerts/alert.service";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,7 +7,6 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -152,29 +152,21 @@ const AnimatedHistoryRowComponent = ({
   };
 
   const handleDeleteEntry = (entryId: string) => {
-    Alert.alert(
-      "Eliminar registro",
-      "¿Seguro que quieres eliminar esta entrada del historial?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-          onPress: () => swipeableRefs.current.get(entryId)?.close(),
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => {
-            swipeableRefs.current.get(entryId)?.close();
-            setDeletingId(entryId);
-          },
-        },
-      ],
-    );
+    showConfirm({
+      title: "Eliminar registro",
+      message: "¿Seguro que quieres eliminar esta entrada del historial?",
+      confirmText: "Eliminar",
+      destructive: true,
+      onCancel: () => swipeableRefs.current.get(entryId)?.close(),
+      onConfirm: () => {
+        swipeableRefs.current.get(entryId)?.close();
+        setDeletingId(entryId);
+      },
+    });
   };
 
   const showHistoryRowActionSheet = (entry: WeightHistoryEntry) => {
-    Alert.alert(
+    showOptions(
       "Registro de peso",
       `${entry.weight} ${entry.weightUnit} · ${new Date(entry.date).toLocaleDateString()}`,
       [
