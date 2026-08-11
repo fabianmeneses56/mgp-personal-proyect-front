@@ -5,6 +5,7 @@ import { ActivityIndicator, AppState, View } from "react-native";
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
+import DeleteExerciseHeaderButton from "@/presentation/exercises/components/DeleteExerciseHeaderButton";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
@@ -108,8 +109,21 @@ const CheckAuthenticationLayout = () => {
 
         <Stack.Screen
           name="exercise/[id]"
-          options={{
-            title: "Detalle del ejercicio",
+          options={({ route }) => {
+            const { id, name } = (route.params ?? {}) as {
+              id?: string;
+              name?: string;
+            };
+
+            return {
+              title: name ?? "Detalle del ejercicio",
+              headerRight: () => (
+                <DeleteExerciseHeaderButton
+                  exerciseId={String(id)}
+                  name={name}
+                />
+              ),
+            };
           }}
         />
 
