@@ -1,36 +1,73 @@
-import { createWeightHistory, CreateWeightHistoryPayload } from "@/core/weight-history/actions/create-weight-history.action";
+import {
+  createWeightHistory,
+  CreateWeightHistoryPayload,
+} from "@/core/weight-history/actions/create-weight-history.action";
 import { deleteWeightHistory } from "@/core/weight-history/actions/delete-weight-history.action";
 import { getWeightHistory } from "@/core/weight-history/actions/get-weight-history.action";
 import { updateWeightHistory } from "@/core/weight-history/actions/update-weight-history.action";
-import { toDisplayWeight, toKg, WeightHistoryApiEntry, WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
+import {
+  toDisplayWeight,
+  toKg,
+  toTimestamp,
+  WeightHistoryApiEntry,
+  WeightHistoryEntry,
+} from "@/core/weight-history/interfaces/weight-history.interface";
 import { showAlert } from "@/helpers/alerts/alert.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { sortStrategies, WeightHistorySortKey } from "../utils/sort-strategies";
 
-// Definido a nivel de modulo a proposito: React Query solo reusa el resultado
-// cacheado del select si la funcion mantiene su identidad entre renders.
-const selectWeightHistory = (entries: WeightHistoryApiEntry[]) =>
-  entries
-    .map<WeightHistoryEntry>((entry) => ({
-      id: entry.id,
-      weight: toDisplayWeight(entry.weightGrams, entry.weightUnit),
-      weightUnit: entry.weightUnit,
-      weightKg: toKg(entry.weightGrams),
-      note: entry.note ?? undefined,
-      date: entry.date,
-    }))
-    // mas reciente primero: es el orden en el que se muestra el historial
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+// Defined at module level on purpose: React Query only reuses the cached select
+// result if the function keeps its identity across renders.
+const selectWeightHistory = (
+  entries: WeightHistoryApiEntry[],
+): WeightHistoryEntry[] =>
+  entries.map<WeightHistoryEntry>((entry) => ({
+    id: entry.id,
+    weight: toDisplayWeight(entry.weightGrams, entry.weightUnit),
+    weightUnit: entry.weightUnit,
+    weightKg: toKg(entry.weightGrams),
+    note: entry.note ?? undefined,
+    date: entry.date,
+    timestamp: toTimestamp(entry.date),
+  }));
 
-export const useWeightHistoryManager = (exerciseId: string) => {
+// Same reason: an inline `= []` would create a new array on every render while
+// the query is loading or failed, invalidating the useMemo hooks that depend on it.
+const EMPTY_HISTORY: WeightHistoryEntry[] = [];
+
+export const useWeightHistoryManager = (
+  exerciseId: string,
+  sortKey: WeightHistorySortKey = "dateDesc",
+) => {
   const queryClient = useQueryClient();
 
-  const { data: weightHistory = [], isLoading, isRefetching, isError, refetch } = useQuery({
+  const {
+    data: mappedHistory = EMPTY_HISTORY,
+    isLoading,
+    isRefetching,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["weight-history", exerciseId],
     queryFn: () => getWeightHistory(exerciseId),
     select: selectWeightHistory,
   });
 
-  const latestWeightEntry = weightHistory[0] ?? null;
+  const weightHistory = useMemo(
+    () => [...mappedHistory].sort(sortStrategies[sortKey]),
+    [mappedHistory, sortKey],
+  );
+
+  const latestWeightEntry = useMemo(
+    () =>
+      mappedHistory.reduce<WeightHistoryEntry | null>(
+        (latest, entry) =>
+          !latest || entry.timestamp > latest.timestamp ? entry : latest,
+        null,
+      ),
+    [mappedHistory],
+  );
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["weight-history", exerciseId] });
@@ -43,8 +80,13 @@ export const useWeightHistoryManager = (exerciseId: string) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ entryId, payload }: { entryId: string; payload: CreateWeightHistoryPayload }) =>
-      updateWeightHistory(exerciseId, entryId, payload),
+    mutationFn: ({
+      entryId,
+      payload,
+    }: {
+      entryId: string;
+      payload: CreateWeightHistoryPayload;
+    }) => updateWeightHistory(exerciseId, entryId, payload),
     onSuccess: invalidate,
     onError: (error: Error) => showAlert("Error", error.message),
   });
