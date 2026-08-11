@@ -1,0 +1,22 @@
+name: E2E tests (iOS, Maestro)
+
+on:
+  pull_request:
+    branches: ['main']
+
+jobs:
+  build_ios_for_e2e:
+    type: build
+    params:
+      platform: ios
+      profile: e2e-test
+
+  maestro_test:
+    needs: [build_ios_for_e2e]
+    type: maestro
+    env:
+      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+    params:
+      build_id: ${{ needs.build_ios_for_e2e.outputs.build_id }}
+      flow_path: ['.maestro/login.yaml']

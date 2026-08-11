@@ -12,6 +12,14 @@
       "distribution": "internal",
       "environment": "production"
     },
+    "e2e-test": {
+      "distribution": "internal",
+      "environment": "production",
+      "channel": "e2e-test",
+      "ios": {
+        "simulator": true
+      }
+    },
     "production": {
       "autoIncrement": true
     }

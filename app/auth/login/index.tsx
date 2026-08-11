@@ -36,6 +36,7 @@ const LoginScreen = () => {
 
           <View style={styles.form}>
             <ThemedTextInput
+              testID="login-email-input"
               placeholder="Correo electrónico"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -45,6 +46,7 @@ const LoginScreen = () => {
             />
 
             <ThemedTextInput
+              testID="login-password-input"
               placeholder="Contraseña"
               secureTextEntry
               secureToggle
@@ -57,6 +59,7 @@ const LoginScreen = () => {
 
           <View style={styles.buttonWrapper}>
             <ThemedButton
+              testID="login-submit-button"
               icon="arrow-forward-outline"
               onPress={onLogin}
               disabled={isPosting}
