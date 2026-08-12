@@ -105,6 +105,7 @@ const HomeScreen = () => {
         }
         renderItem={({ item, index }) => (
           <Pressable
+            testID={`category-row-${item.name}`}
             onPress={() => {
               Haptics.selectionAsync();
               router.push({

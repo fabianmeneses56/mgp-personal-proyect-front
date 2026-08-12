@@ -93,6 +93,7 @@ const CheckAuthenticationLayout = () => {
             headerLeft: () => <LogoutIconButton />,
             headerRight: () => (
               <AddNewButton
+                testID="home-new-category-button"
                 onPressAction={() => router.navigate("/new-category")}
               />
             ),

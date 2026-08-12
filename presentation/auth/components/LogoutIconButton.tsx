@@ -8,7 +8,7 @@ const LogoutIconButton = () => {
   const { logout } = useAuthStore();
 
   return (
-    <Pressable hitSlop={12} onPress={logout}>
+    <Pressable testID="home-logout-button" hitSlop={12} onPress={logout}>
       <Ionicons name="log-out-outline" size={24} color={primaryColor} />
     </Pressable>
   );

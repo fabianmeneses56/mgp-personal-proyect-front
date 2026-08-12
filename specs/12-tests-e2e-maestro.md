@@ -1,6 +1,6 @@
 # Spec 12 — Tests E2E locales con Maestro
 
-- **Estado:** Draft
+- **Estado:** Implemented
 - **Dependencias:**
   - Spec `08-infraestructura-tests.md` (Implemented) — dejó los E2E explícitamente
     fuera de alcance con la nota "spec propia si entra"; esta es esa spec. No
@@ -172,7 +172,7 @@ Cada paso deja el proyecto funcional: la app no cambia de comportamiento (los
 9. **Cierre.** Corrida completa `npm run test:e2e` en verde (los 9 flows,
    backend de LAN arriba). Actualizar `CLAUDE.md`: instalación de Maestro,
    precondiciones (app instalada, Metro, backend) y el comando `npm run
-   test:e2e`. Verificar que `npm test`, `npm run lint` y `npx tsc --noEmit`
+test:e2e`. Verificar que `npm test`, `npm run lint` y `npx tsc --noEmit`
    siguen en verde (los `testID` no rompen nada).
 
 ---
@@ -267,13 +267,13 @@ credenciales de la cuenta de prueba.
 
 ## Riesgos
 
-| Riesgo                                                                                                                                                                                                                 | Mitigación                                                                                                                                                                                                                                            |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| En iOS, `clearState` de Maestro limpia el contenedor de datos de la app pero puede **no** limpiar el keychain, donde `expo-secure-store` guarda el token: la app arrancaría ya autenticada y ningún flow vería el login. | El paso 3 del plan lo verifica antes de escribir el resto de flows. Si el token sobrevive, se añade un subflow compartido `_ensure-logged-out.yaml` (si aparece el home, hace logout) que cada flow ejecuta antes de empezar.                          |
-| Los componentes `Themed*` (`ThemedButton`, `ThemedTextInput`) podrían no reenviar la prop `testID` al elemento nativo, dejando los selectores ciegos.                                                                   | También se detecta en el paso 3 (login usa ambos componentes). Si no la reenvían, se añade el passthrough — cambio inerte que no afecta a ningún consumidor.                                                                                          |
-| Los botones de los alerts nativos ("Cancelar", "Eliminar", "OK") no admiten `testID`: solo se pueden seleccionar por texto, y un cambio de copy rompe los flows 01, 06, 07 y 08.                                        | Riesgo aceptado: es la única opción con alerts nativos. La spec 11 centralizó los textos en `alert.service.ts`, así que un cambio de copy es visible en un solo archivo y el rojo del E2E señala exactamente qué texto cambió.                        |
-| E2E contra backend real + bundle de desarrollo: la latencia de red o un backend lento producen fallos intermitentes por timing.                                                                                        | Maestro espera automáticamente a que los elementos aparezcan; para las operaciones de red (login, guardados) se usa `extendedWaitUntil` con timeout generoso en vez del timeout por defecto. Si un flow resulta flaky, se ajusta su espera, no se salta. |
-| Backend de LAN apagado o con IP cambiada: los 9 flows fallan en rojo sin que el problema sea de los tests.                                                                                                              | Precondición documentada en `CLAUDE.md`. El modo de fallo es obvio: el flow 02 (login exitoso) falla en el primer paso de red; ver ese patrón (01 verde, 02 rojo) apunta directo al backend.                                                          |
+| Riesgo                                                                                                                                                                                                                   | Mitigación                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| En iOS, `clearState` de Maestro limpia el contenedor de datos de la app pero puede **no** limpiar el keychain, donde `expo-secure-store` guarda el token: la app arrancaría ya autenticada y ningún flow vería el login. | El paso 3 del plan lo verifica antes de escribir el resto de flows. Si el token sobrevive, se añade un subflow compartido `_ensure-logged-out.yaml` (si aparece el home, hace logout) que cada flow ejecuta antes de empezar.                            |
+| Los componentes `Themed*` (`ThemedButton`, `ThemedTextInput`) podrían no reenviar la prop `testID` al elemento nativo, dejando los selectores ciegos.                                                                    | También se detecta en el paso 3 (login usa ambos componentes). Si no la reenvían, se añade el passthrough — cambio inerte que no afecta a ningún consumidor.                                                                                             |
+| Los botones de los alerts nativos ("Cancelar", "Eliminar", "OK") no admiten `testID`: solo se pueden seleccionar por texto, y un cambio de copy rompe los flows 01, 06, 07 y 08.                                         | Riesgo aceptado: es la única opción con alerts nativos. La spec 11 centralizó los textos en `alert.service.ts`, así que un cambio de copy es visible en un solo archivo y el rojo del E2E señala exactamente qué texto cambió.                           |
+| E2E contra backend real + bundle de desarrollo: la latencia de red o un backend lento producen fallos intermitentes por timing.                                                                                          | Maestro espera automáticamente a que los elementos aparezcan; para las operaciones de red (login, guardados) se usa `extendedWaitUntil` con timeout generoso en vez del timeout por defecto. Si un flow resulta flaky, se ajusta su espera, no se salta. |
+| Backend de LAN apagado o con IP cambiada: los 9 flows fallan en rojo sin que el problema sea de los tests.                                                                                                               | Precondición documentada en `CLAUDE.md`. El modo de fallo es obvio: el flow 02 (login exitoso) falla en el primer paso de red; ver ese patrón (01 verde, 02 rojo) apunta directo al backend.                                                             |
 
 ---
 

@@ -124,6 +124,7 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
       {renderHistory()}
 
       <Pressable
+        testID="exercise-add-weight-button"
         onPress={openCreateWeightModal}
         accessibilityRole="button"
         style={({ pressed }) => [
