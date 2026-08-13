@@ -46,6 +46,7 @@ const RenderExerciseCard = ({
 
   return (
     <Pressable
+      testID={`exercise-row-${item.name}`}
       onPress={() => {
         Haptics.selectionAsync();
         router.push({
@@ -90,6 +91,7 @@ const RenderExerciseCard = ({
       </View>
 
       <Pressable
+        testID={`exercise-delete-button-${item.name}`}
         onPress={() => onDelete(item)}
         disabled={isDeleting}
         hitSlop={6}

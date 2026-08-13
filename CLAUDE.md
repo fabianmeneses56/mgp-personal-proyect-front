@@ -21,6 +21,7 @@ npm run reset-project  # moves starter app/ to app-example/ and creates a blank 
 npm test                # jest (jest-expo preset) — runs the full suite once
 npm run test:watch      # jest --watch
 npm run test:coverage   # jest --coverage
+npm run test:e2e        # Maestro E2E suite against the iOS simulator (see "E2E tests" below)
 ```
 
 Tests live in `__tests__/` folders next to the code they cover (e.g.
@@ -32,6 +33,44 @@ and assert against the mocked method; `core/api/__tests__/mgpApi.test.ts` is the
 one exception, using `axios-mock-adapter` against the real instance to exercise
 its request/response interceptors. Global mocks (`expo-secure-store`,
 `expo-router`, `Alert.alert`) live in `jest.setup.ts`.
+
+## E2E tests (Maestro)
+
+Flows live in `.maestro/` as declarative YAML, one file per user flow
+(`01-login-fallido.yaml` … `09-logout.yaml`, plus the shared subflow
+`.maestro/shared/_ensure-logged-out.yaml`). Maestro CLI is a machine-level
+install, not an npm dependency:
+
+```bash
+curl -fsSL "https://get.maestro.mobile.dev" | bash
+maestro --version   # verify the install; add ~/.maestro/bin to PATH if needed
+```
+
+`npm run test:e2e` runs `scripts/e2e-with-env.js`, which reads
+`E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` from `.env` (Maestro itself does not
+read `.env` files) and invokes `maestro test .maestro/ -e EMAIL=... -e
+PASSWORD=...`. It exits early with a clear error if those vars are missing.
+Pass a specific flow or folder as an argument to run a subset, e.g. `node
+scripts/e2e-with-env.js .maestro/03-crear-categoria.yaml`.
+
+Preconditions (not automated by the script):
+
+- The app is installed on the iOS simulator (`npm run ios`).
+- Metro is running.
+- The LAN development backend (the one `.env.development` points at) is up.
+- `.env` has `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` for a disposable test
+  account on that backend.
+
+Every flow launches with `clearState: true` and is independent — no flow
+relies on state left by another, and each can be run alone. Flows that
+create data generate a unique per-run suffix (`E2E Cat ${suffix}`, `E2E Ex
+${suffix}`) since the test account's data is never cleaned up between runs.
+iOS's keychain can survive `clearState`, which would leave the app already
+authenticated; `shared/_ensure-logged-out.yaml` guards against that by
+logging out first if the home screen is visible on launch.
+
+E2E is iOS-simulator-only, local-only (no CI), and out of scope for Jest —
+see `specs/12-tests-e2e-maestro.md` for the full rationale.
 
 ## Environment
 

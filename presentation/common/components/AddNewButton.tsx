@@ -5,12 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface props {
   onPressAction: () => void;
+  testID?: string;
 }
 
-const AddNewButton = ({ onPressAction }: props) => {
+const AddNewButton = ({ onPressAction, testID }: props) => {
   const primaryColor = useThemeColor({}, "primary");
   return (
-    <Pressable hitSlop={12} onPress={onPressAction}>
+    <Pressable testID={testID} hitSlop={12} onPress={onPressAction}>
       <Ionicons name="add" size={24} color={primaryColor} />
     </Pressable>
   );

@@ -1,3 +1,4 @@
+import { showConfirm } from "@/helpers/alerts/alert.service";
 import FullscreenImageModal from "@/presentation/exercises/components/FullscreenImageModal";
 import WeightHistory from "@/presentation/exercises/components/WeightHistory";
 import { useExerciseActions } from "@/presentation/exercises/hooks/useExerciseActions";
@@ -8,8 +9,8 @@ import { WeightProgressChart } from "@/presentation/weight-history/components/We
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -18,7 +19,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { showConfirm } from "@/helpers/alerts/alert.service";
 
 const ExerciseDetailScreen = () => {
   const { id, name, categoryName, imageUrl } = useLocalSearchParams<{
@@ -27,8 +27,6 @@ const ExerciseDetailScreen = () => {
     categoryName?: string;
     imageUrl?: string;
   }>();
-  const navigation = useNavigation();
-
   const backgroundColor = useThemeColor({}, "background");
   const surfaceColor = useThemeColor({}, "surface");
   const borderColor = useThemeColor({}, "surfaceBorder");
@@ -73,25 +71,6 @@ const ExerciseDetailScreen = () => {
       onConfirm: () => remove(),
     });
   }, [isDeleting, remove, name]);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: name ? String(name) : undefined,
-      headerRight: () => (
-        <Pressable
-          onPress={confirmDeleteExercise}
-          disabled={isDeleting}
-          hitSlop={10}
-          style={({ pressed }) => [
-            styles.deleteHeaderButton,
-            { opacity: pressed || isDeleting ? 0.75 : 1 },
-          ]}
-        >
-          <Ionicons name="trash-outline" size={22} color={dangerText} />
-        </Pressable>
-      ),
-    });
-  }, [confirmDeleteExercise, dangerText, isDeleting, name, navigation]);
 
   return (
     <ScrollView
@@ -267,10 +246,6 @@ const ExerciseDetailScreen = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-  },
-  deleteHeaderButton: {
-    padding: 4,
-    transform: [{ translateX: 3 }],
   },
   container: {
     padding: 20,

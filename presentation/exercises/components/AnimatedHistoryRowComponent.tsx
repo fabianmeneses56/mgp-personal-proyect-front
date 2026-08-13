@@ -232,6 +232,7 @@ const AnimatedHistoryRowComponent = ({
           )}
         >
           <Pressable
+            testID={`weight-row-${entry.note || entry.id}`}
             onLongPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               showHistoryRowActionSheet(entry);

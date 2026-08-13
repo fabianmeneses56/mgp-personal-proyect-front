@@ -1,0 +1,17 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/_ensure-logged-out.yaml
+- tapOn:
+    id: "login-email-input"
+- inputText: "no-existe@example.com"
+- tapOn:
+    id: "login-password-input"
+- inputText: "contraseña-incorrecta"
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+- extendedWaitUntil:
+    visible: "Usuario o contraseña no son correctos"
+    timeout: 15000

@@ -1,0 +1,118 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/_ensure-logged-out.yaml
+- tapOn:
+    id: "login-email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+- extendedWaitUntil:
+    visible: "Tus categorias"
+    timeout: 15000
+- evalScript: ${output.suffix = Date.now()}
+- tapOn:
+    id: "home-new-category-button"
+- tapOn:
+    id: "new-category-name-input"
+- inputText: "E2E Cat ${output.suffix}"
+- tapOn: "Nueva categoria"
+- tapOn:
+    id: "new-category-submit-button"
+- extendedWaitUntil:
+    visible: "Categoria guardada"
+    timeout: 15000
+- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: "category-row-E2E Cat ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "category-row-E2E Cat ${output.suffix}"
+- tapOn:
+    id: "category-new-exercise-button"
+- tapOn:
+    id: "new-exercise-name-input"
+- inputText: "E2E Ex ${output.suffix}"
+- tapOn:
+    id: "new-exercise-weight-input"
+- inputText: "50"
+- tapOn: "Nuevo ejercicio"
+- tapOn:
+    id: "new-exercise-submit-button"
+- extendedWaitUntil:
+    visible: "Ejercicio guardado"
+    timeout: 15000
+- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: "exercise-row-E2E Ex ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "exercise-row-E2E Ex ${output.suffix}"
+- extendedWaitUntil:
+    visible: "Historico de pesos"
+    timeout: 15000
+- tapOn:
+    id: "exercise-add-weight-button"
+- tapOn:
+    id: "weight-entry-weight-input"
+- inputText: "50"
+- tapOn:
+    id: "weight-entry-note-input"
+- inputText: "E2E Peso ${output.suffix}"
+- tapOn: "Registrar nuevo peso"
+- tapOn:
+    id: "weight-entry-submit-button"
+- extendedWaitUntil:
+    visible: "Historico de pesos"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "weight-row-E2E Peso ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+
+# Editar el registro y verificar el nuevo valor
+- longPressOn:
+    id: "weight-row-E2E Peso ${output.suffix}"
+- tapOn: "Editar"
+- tapOn:
+    id: "weight-entry-weight-input"
+- eraseText: 10
+- inputText: "75"
+- tapOn: "Editar peso"
+- tapOn:
+    id: "weight-entry-submit-button"
+- extendedWaitUntil:
+    visible: "Historico de pesos"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "weight-row-E2E Peso ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "75 kg"
+
+# Eliminar: primero cancelar (no debe borrar), luego confirmar (debe borrar)
+- longPressOn:
+    id: "weight-row-E2E Peso ${output.suffix}"
+- tapOn: "Eliminar"
+- tapOn: "Cancelar"
+- assertVisible:
+    id: "weight-row-E2E Peso ${output.suffix}"
+- longPressOn:
+    id: "weight-row-E2E Peso ${output.suffix}"
+- tapOn: "Eliminar"
+- tapOn: "Eliminar"
+- extendedWaitUntil:
+    notVisible:
+      id: "weight-row-E2E Peso ${output.suffix}"
+    timeout: 15000

@@ -97,6 +97,7 @@ const NewExerciseScreen = () => {
       </ThemedText>
 
       <ThemedTextInput
+        testID="new-exercise-name-input"
         placeholder="Nombre del ejercicio"
         value={exerciseName}
         onChangeText={setExerciseName}
@@ -107,6 +108,7 @@ const NewExerciseScreen = () => {
 
       <View style={styles.weightRow}>
         <ThemedTextInput
+          testID="new-exercise-weight-input"
           placeholder="Peso"
           value={exerciseWeight}
           onChangeText={setExerciseWeight}
@@ -178,6 +180,7 @@ const NewExerciseScreen = () => {
 
       <View style={styles.modalButtonWrapper}>
         <ThemedButton
+          testID="new-exercise-submit-button"
           onPress={handleCreateExercise}
           disabled={exerciseMutation.isPending}
         >

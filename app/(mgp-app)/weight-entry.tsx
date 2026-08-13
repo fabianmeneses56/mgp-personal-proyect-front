@@ -100,6 +100,7 @@ const WeightEntryScreen = () => {
       </ThemedText>
 
       <ThemedTextInput
+        testID="weight-entry-weight-input"
         placeholder="Peso"
         keyboardType="decimal-pad"
         value={weight}
@@ -130,6 +131,7 @@ const WeightEntryScreen = () => {
       </View>
 
       <ThemedTextInput
+        testID="weight-entry-note-input"
         placeholder="Nota (opcional)"
         value={note}
         onChangeText={setNote}
@@ -172,7 +174,11 @@ const WeightEntryScreen = () => {
       ) : null}
 
       <View style={styles.submitButtonWrapper}>
-        <ThemedButton onPress={handleSubmit} disabled={isSaving}>
+        <ThemedButton
+          testID="weight-entry-submit-button"
+          onPress={handleSubmit}
+          disabled={isSaving}
+        >
           {isSaving
             ? "Guardando..."
             : isEditing

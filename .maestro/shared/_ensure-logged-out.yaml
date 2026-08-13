@@ -1,0 +1,19 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+# El keychain de iOS puede sobrevivir a clearState, dejando la app ya
+# autenticada. Espera a que cargue login u home (el arranque en frío del
+# dev client puede tardar) y, si aparece el home, hace logout antes de que
+# el flow que llama a este subflow empiece sus propios pasos.
+- extendedWaitUntil:
+    visible: "Ingresar|Tus categorias"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "Tus categorias"
+    commands:
+      - tapOn:
+          id: "home-logout-button"
+      - extendedWaitUntil:
+          visible:
+            id: "login-email-input"
+          timeout: 15000

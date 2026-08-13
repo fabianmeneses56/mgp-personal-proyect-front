@@ -1,0 +1,22 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/_ensure-logged-out.yaml
+- tapOn:
+    id: "login-email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+- extendedWaitUntil:
+    visible: "Tus categorias"
+    timeout: 15000
+- tapOn:
+    id: "home-logout-button"
+- extendedWaitUntil:
+    visible: "Ingresar"
+    timeout: 15000

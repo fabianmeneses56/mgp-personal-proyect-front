@@ -1,9 +1,9 @@
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
-import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
+import { sortStrategies } from "../utils/sort-strategies";
 
 interface WeightChartPoint {
   value: number;
@@ -17,13 +17,11 @@ interface WeightProgressChartProps {
 }
 
 function toChartPoints(entries: WeightHistoryEntry[]): WeightChartPoint[] {
-  return [...entries]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map((entry) => ({
-      value: entry.weightKg,
-      date: entry.date,
-      note: entry.note,
-    }));
+  return [...entries].sort(sortStrategies.dateAsc).map((entry) => ({
+    value: entry.weightKg,
+    date: entry.date,
+    note: entry.note,
+  }));
 }
 
 function formatShortDate(date: string): string {
@@ -46,10 +44,7 @@ function TooltipLabel({
 }) {
   return (
     <View
-      style={[
-        styles.tooltip,
-        { backgroundColor: surfaceColor, borderColor },
-      ]}
+      style={[styles.tooltip, { backgroundColor: surfaceColor, borderColor }]}
     >
       <Text style={[styles.tooltipWeight, { color: textColor }]}>
         {point.value} kg
@@ -122,8 +117,16 @@ export function WeightProgressChart({
       endOpacity={0}
       thickness={2.5}
       dataPointsColor={primaryColor}
-      yAxisTextStyle={{ color: faintText, fontFamily: Fonts.medium, fontSize: 11 }}
-      xAxisLabelTextStyle={{ color: faintText, fontFamily: Fonts.medium, fontSize: 11 }}
+      yAxisTextStyle={{
+        color: faintText,
+        fontFamily: Fonts.medium,
+        fontSize: 11,
+      }}
+      xAxisLabelTextStyle={{
+        color: faintText,
+        fontFamily: Fonts.medium,
+        fontSize: 11,
+      }}
       xAxisColor={borderColor}
       yAxisColor={borderColor}
       rulesColor={borderColor}

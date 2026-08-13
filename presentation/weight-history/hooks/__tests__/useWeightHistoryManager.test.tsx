@@ -61,6 +61,39 @@ describe("useWeightHistoryManager", () => {
     expect(result.current.latestWeightEntry?.id).toBe("entry-3");
   });
 
+  it("applies the requested sort strategy to the list", async () => {
+    mockedGetWeightHistory.mockResolvedValue(buildWeightHistoryApiEntries());
+
+    const { result } = await renderHook(
+      () => useWeightHistoryManager("exercise-1", "weightAsc"),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.weightHistory.map((entry) => entry.id)).toEqual([
+      "entry-2",
+      "entry-3",
+      "entry-1",
+    ]);
+  });
+
+  it("keeps latestWeightEntry as the most recent entry regardless of the sort strategy", async () => {
+    mockedGetWeightHistory.mockResolvedValue(buildWeightHistoryApiEntries());
+
+    const { result } = await renderHook(
+      () => useWeightHistoryManager("exercise-1", "weightAsc"),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // entry-2 is the lightest one and leads the list; the most recent entry is
+    // still entry-3.
+    expect(result.current.weightHistory[0].id).toBe("entry-2");
+    expect(result.current.latestWeightEntry?.id).toBe("entry-3");
+  });
+
   it("calls createWeightHistory when saveEntry is called without an entryId", async () => {
     mockedGetWeightHistory.mockResolvedValue([]);
     mockedCreateWeightHistory.mockResolvedValue(
