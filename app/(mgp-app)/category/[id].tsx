@@ -135,6 +135,7 @@ const CategoryScreen = () => {
             <Ionicons name="trash-outline" size={22} color={dangerText} />
           </Pressable>
           <AddNewButton
+            testID="category-new-exercise-button"
             onPressAction={() =>
               router.navigate({
                 pathname: "/new-exercise",

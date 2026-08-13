@@ -1,0 +1,73 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/_ensure-logged-out.yaml
+- tapOn:
+    id: "login-email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+- extendedWaitUntil:
+    visible: "Tus categorias"
+    timeout: 15000
+- evalScript: ${output.suffix = Date.now()}
+- tapOn:
+    id: "home-new-category-button"
+- tapOn:
+    id: "new-category-name-input"
+- inputText: "E2E Cat ${output.suffix}"
+- tapOn: "Nueva categoria"
+- tapOn:
+    id: "new-category-submit-button"
+- extendedWaitUntil:
+    visible: "Categoria guardada"
+    timeout: 15000
+- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: "category-row-E2E Cat ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "category-row-E2E Cat ${output.suffix}"
+- tapOn:
+    id: "category-new-exercise-button"
+- tapOn:
+    id: "new-exercise-name-input"
+- inputText: "E2E Ex ${output.suffix}"
+- tapOn:
+    id: "new-exercise-weight-input"
+- inputText: "50"
+- tapOn: "Nuevo ejercicio"
+- tapOn:
+    id: "new-exercise-submit-button"
+- extendedWaitUntil:
+    visible: "Ejercicio guardado"
+    timeout: 15000
+- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: "exercise-row-E2E Ex ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+
+# Cancelar primero: el ejercicio debe seguir existiendo
+- tapOn:
+    id: "exercise-delete-button-E2E Ex ${output.suffix}"
+- tapOn: "Cancelar"
+- assertVisible:
+    id: "exercise-row-E2E Ex ${output.suffix}"
+
+# Confirmar: el ejercicio debe desaparecer
+- tapOn:
+    id: "exercise-delete-button-E2E Ex ${output.suffix}"
+- tapOn: "Eliminar"
+- extendedWaitUntil:
+    notVisible:
+      id: "exercise-row-E2E Ex ${output.suffix}"
+    timeout: 15000

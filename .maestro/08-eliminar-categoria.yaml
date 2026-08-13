@@ -1,0 +1,54 @@
+appId: com.fabianmeneses56.mgp-personal-proyect-front
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/_ensure-logged-out.yaml
+- tapOn:
+    id: "login-email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+- extendedWaitUntil:
+    visible: "Tus categorias"
+    timeout: 15000
+- evalScript: ${output.suffix = Date.now()}
+- tapOn:
+    id: "home-new-category-button"
+- tapOn:
+    id: "new-category-name-input"
+- inputText: "E2E Cat ${output.suffix}"
+- tapOn: "Nueva categoria"
+- tapOn:
+    id: "new-category-submit-button"
+- extendedWaitUntil:
+    visible: "Categoria guardada"
+    timeout: 15000
+- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: "category-row-E2E Cat ${output.suffix}"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "category-row-E2E Cat ${output.suffix}"
+
+# Cancelar primero: la categoria debe seguir existiendo (seguimos en la pantalla)
+- tapOn: "Eliminar categoria"
+- tapOn: "Cancelar"
+- assertVisible: "Eliminar categoria"
+
+# Confirmar: la categoria se elimina y se vuelve al home sin ella
+- tapOn: "Eliminar categoria"
+- tapOn: "Eliminar"
+- extendedWaitUntil:
+    visible: "Categoria eliminada"
+    timeout: 15000
+- tapOn: "OK"
+- extendedWaitUntil:
+    notVisible:
+      id: "category-row-E2E Cat ${output.suffix}"
+    timeout: 15000

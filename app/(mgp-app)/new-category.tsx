@@ -74,6 +74,7 @@ const NewCategoryScreen = () => {
 
       <Text style={[styles.fieldLabel, { color: faintText }]}>Nombre</Text>
       <ThemedTextInput
+        testID="new-category-name-input"
         placeholder="Nombre de la categoria"
         autoCapitalize="words"
         autoFocus
@@ -83,7 +84,11 @@ const NewCategoryScreen = () => {
       />
 
       <View style={styles.modalButtonWrapper}>
-        <ThemedButton onPress={handleSubmit} disabled={productMutation.isPending}>
+        <ThemedButton
+          testID="new-category-submit-button"
+          onPress={handleSubmit}
+          disabled={productMutation.isPending}
+        >
           {productMutation.isPending ? "Guardando..." : "Guardar categoria"}
         </ThemedButton>
       </View>
