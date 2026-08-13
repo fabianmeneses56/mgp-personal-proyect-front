@@ -1,4 +1,4 @@
-# MGP — Personal Project (Front)
+# MGP Tracker
 
 Aplicación Expo (React Native) para llevar el control de categorías y ejercicios de entrenamiento, con navegación basada en archivos (Expo Router). El backend ("mgp") es una API separada consumida vía axios; este repositorio no contiene código de backend.
 
