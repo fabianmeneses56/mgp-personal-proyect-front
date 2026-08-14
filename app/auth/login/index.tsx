@@ -2,10 +2,8 @@ import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native
 import { Ionicons } from "@expo/vector-icons";
 
 import { useLogin } from "@/presentation/auth/hooks/useLogin";
-import { Fonts } from "@/presentation/theme/fonts";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
-import ThemedLink from "@/presentation/theme/components/ThemedLink";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
 
@@ -68,15 +66,6 @@ const LoginScreen = () => {
             </ThemedButton>
           </View>
         </View>
-
-        <View style={styles.footer}>
-          <ThemedText style={{ color: mutedText, fontFamily: Fonts.medium }}>
-            ¿No tenés cuenta?{" "}
-          </ThemedText>
-          <ThemedLink href="/auth/register" style={styles.footerLink}>
-            Crear una
-          </ThemedLink>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -116,16 +105,6 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: 10,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 36,
-  },
-  footerLink: {
-    fontFamily: Fonts.bold,
-    fontSize: 15.5,
   },
 });
 
