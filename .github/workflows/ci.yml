@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  # Sin filtro de `branches`: corre en todo PR, apunte a la rama que apunte.
+  pull_request:
+  push:
+    branches: [main]
+
+# Un PR que recibe varios pushes seguidos cancela las corridas anteriores.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, typecheck y tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # `.expo/types/router.d.ts` y `expo-env.d.ts` están en .gitignore y los
+      # genera el dev server. Sin ellos, `typedRoutes: true` hace fallar a tsc
+      # en cada `router.push("/ruta")`. Este es el comando oficial de Expo para
+      # generarlos en CI sin levantar Metro.
+      - name: Generar tipos de Expo Router
+        run: npx expo customize tsconfig.json
+
+      # `if: '!cancelled()'` en los pasos siguientes: si lint falla, igual se
+      # corren typecheck y tests, así el PR muestra todos los errores de una vez
+      # en lugar de uno por corrida.
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        if: '!cancelled()'
+        run: npm run typecheck
+
+      - name: Tests
+        if: '!cancelled()'
+        run: npm test -- --ci

@@ -11,6 +11,7 @@
     "ios:prod-api": "node ./scripts/start-with-env.js .env.production run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
