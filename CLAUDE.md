@@ -97,13 +97,44 @@ relies on to run a *development* bundle against the production API without flipp
 EAS Build only uploads git-tracked files, so `.env.production` will not reach the
 builder — those values must be set as EAS Environment Variables when `eas.json` is added.
 
+## Release (iOS / TestFlight)
+
+Production iOS builds and TestFlight submission are manual, run from the terminal
+with EAS. See `specs/13-publicacion-testflight-ios.md` for the full rationale.
+
+Preconditions:
+
+- `npx eas-cli whoami` shows an active Expo session.
+- `npx eas-cli env:list production` includes `EXPO_PUBLIC_API_URL` pointing at the
+  deployed backend (these `EXPO_PUBLIC_*` values are inlined at build time —
+  `.env.production` itself never reaches EAS Build, since it only uploads
+  git-tracked files).
+- Active Apple Developer Program membership.
+- `extra.eas.projectId` in `app.json` and the `production` profile in `eas.json`
+  already exist (both already set up for this project).
+
+Commands:
+
+```bash
+eas build --platform ios --profile production   # production build; certs/provisioning
+                                                  # profiles are managed automatically by EAS
+eas submit --platform ios --latest               # submit the latest build to TestFlight;
+                                                  # on the first submit, EAS also creates the
+                                                  # App Store Connect app record
+```
+
+The iOS `buildNumber` is not tracked in the repo: `eas.json`'s `production` profile
+has `appVersionSource: "remote"` and `autoIncrement: true`, so EAS increments it on
+every build. `version` in `app.json` is the marketing version and is bumped manually.
+
 ## Architecture
 
 The codebase follows a layered structure that cuts across `core/`, `presentation/`, and `app/`:
 
 - **`app/`** — Expo Router file-based routes only. Screens here import everything else; they should not contain API or business logic beyond data shaping for display.
   - `app/_layout.tsx` — root layout: sets up `QueryClientProvider` (React Query) and navigation `ThemeProvider`.
-  - `app/auth/` — login/register routes, outside the authenticated group.
+  - `app/auth/` — login route, outside the authenticated group. (There is no
+    register route — see "Known inconsistencies" below.)
   - `app/(mgp-app)/` — authenticated route group. `_layout.tsx` here (`CheckAuthenticationLayout`) gates the whole group on `useAuthStore().status`: shows a spinner while `"checking"`, redirects to `/auth/login` when `"unauthenticated"`, otherwise renders the `Stack` for `(home)/index`, `category/[id]`, `exercise/[id]`.
 - **`core/`** — domain logic, organized by feature (`auth`, `categories`, `exercises`), each with:
   - `actions/` — plain async functions that call the API directly via `mgpApi` and either return data or throw/return null on failure (inconsistent today — `auth-actions.ts` swallows errors and returns `null`, `category`/`exercise` actions throw `Error`). Check the existing action's error convention before adding a sibling.
@@ -126,7 +157,7 @@ The codebase follows a layered structure that cuts across `core/`, `presentation
 ### Known inconsistencies to be aware of
 
 - `core/categories/actions/create-update-category.action.ts` has a TODO/no-op branch for updating an existing category (`category.id && category.id !== "new"` just logs `"pending"` and falls through to create) — update is not actually implemented yet.
-- Auth register flow has a `// TODO: Tarea: Hacer el register` in `core/auth/actions/auth-actions.ts`; `app/auth/register/index.tsx` exists as a route but the action layer isn't wired up.
+- Auth register flow has a `// TODO: Tarea: Hacer el register` in `core/auth/actions/auth-actions.ts`, but there is no `app/auth/register/` route (removed in spec 13; the stub is recoverable from git history when the real register spec lands).
 
 ### agent-device
 
