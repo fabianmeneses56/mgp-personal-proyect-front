@@ -1,0 +1,53 @@
+name: Release iOS a TestFlight
+
+# Se dispara al empujar un tag de versión (v1.2.3). El build de producción
+# no corre en cada merge a propósito: cada corrida gasta un build de EAS y
+# crea una versión en TestFlight, así que el release es un acto deliberado.
+on:
+  push:
+    tags: ['v*.*.*']
+
+jobs:
+  verify_version:
+    name: Verificar que el tag coincide con app.json
+    # `expo.version` en app.json es la versión de marketing y se sube a mano;
+    # el tag es lo único que la gente ve. Si divergen, TestFlight muestra un
+    # número distinto al del tag y no queda registro de qué se publicó.
+    # Falla antes de gastar el build.
+    steps:
+      - name: Comparar tag con expo.version
+        run: |
+          REF="${{ github.ref_name }}"
+          # En una corrida manual (eas workflow:run) ref_name es la rama, no un
+          # tag: ahí no hay nada que comparar y la verificación se omite.
+          case "$REF" in
+            v*.*.*) ;;
+            *)
+              echo "Corrida manual desde '$REF' (no es un tag de version); se omite la verificacion."
+              exit 0
+              ;;
+          esac
+          APP_VERSION="$(node -p "require('./app.json').expo.version")"
+          if [ "$REF" != "v$APP_VERSION" ]; then
+            echo "El tag es $REF pero app.json tiene version $APP_VERSION."
+            echo "Sube expo.version a ${REF#v} y vuelve a etiquetar, o etiqueta v$APP_VERSION."
+            exit 1
+          fi
+          echo "OK: $REF coincide con expo.version $APP_VERSION"
+
+  build_ios:
+    name: Build de produccion iOS
+    needs: [verify_version]
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  testflight:
+    name: Subir a TestFlight
+    needs: [build_ios]
+    type: testflight
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      changelog: |
+        Release ${{ github.ref_name }}

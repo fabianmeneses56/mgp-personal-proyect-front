@@ -4,6 +4,7 @@ import { ActivityIndicator, AppState, View } from "react-native";
 
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
+import ActivityHeaderButton from "@/presentation/activity/components/ActivityHeaderButton";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
 import DeleteExerciseHeaderButton from "@/presentation/exercises/components/DeleteExerciseHeaderButton";
 import { Fonts } from "@/presentation/theme/fonts";
@@ -93,10 +94,13 @@ const CheckAuthenticationLayout = () => {
             title: "Categorias",
             headerLeft: () => <LogoutIconButton />,
             headerRight: () => (
-              <AddNewButton
-                testID="home-new-category-button"
-                onPressAction={() => router.navigate("/new-category")}
-              />
+              <View style={{ flexDirection: "row", gap: 16 }}>
+                <ActivityHeaderButton />
+                <AddNewButton
+                  testID="home-new-category-button"
+                  onPressAction={() => router.navigate("/new-category")}
+                />
+              </View>
             ),
           }}
         />
@@ -132,6 +136,13 @@ const CheckAuthenticationLayout = () => {
           name="exercise-progress"
           options={{
             title: "Progreso",
+          }}
+        />
+
+        <Stack.Screen
+          name="activity"
+          options={{
+            title: "Actividad",
           }}
         />
 
