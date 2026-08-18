@@ -99,33 +99,48 @@ builder — those values must be set as EAS Environment Variables when `eas.json
 
 ## Release (iOS / TestFlight)
 
-Production iOS builds and TestFlight submission are manual, run from the terminal
-with EAS. See `specs/13-publicacion-testflight-ios.md` for the full rationale.
+Production iOS builds and TestFlight submission run on EAS Workflows, triggered by
+pushing a version tag. See `specs/14-cd-release-testflight.md` for the rationale.
 
-Preconditions:
-
-- `npx eas-cli whoami` shows an active Expo session.
-- `npx eas-cli env:list production` includes `EXPO_PUBLIC_API_URL` pointing at the
-  deployed backend (these `EXPO_PUBLIC_*` values are inlined at build time —
-  `.env.production` itself never reaches EAS Build, since it only uploads
-  git-tracked files).
-- Active Apple Developer Program membership.
-- `extra.eas.projectId` in `app.json` and the `production` profile in `eas.json`
-  already exist (both already set up for this project).
-
-Commands:
+To cut a release: bump `expo.version` in `app.json`, merge it to `main`, then tag
+that commit with the same version prefixed with `v`:
 
 ```bash
-eas build --platform ios --profile production   # production build; certs/provisioning
-                                                  # profiles are managed automatically by EAS
-eas submit --platform ios --latest               # submit the latest build to TestFlight;
-                                                  # on the first submit, EAS also creates the
-                                                  # App Store Connect app record
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+That runs `.eas/workflows/release-testflight-on-tag.yml` on EAS, in three jobs:
+
+1. `verify_version` — fails if the tag does not match `expo.version` in `app.json`,
+   before spending a build. Skipped on manual runs, where `github.ref_name` is a
+   branch rather than a tag.
+2. `build_ios` — `production` profile, certs/provisioning managed by EAS.
+3. `testflight` — uploads the build and waits for App Store Connect processing.
+
+To re-run a failed release without moving the tag:
+
+```bash
+npx eas-cli workflow:run release-testflight-on-tag.yml
 ```
 
 The iOS `buildNumber` is not tracked in the repo: `eas.json`'s `production` profile
 has `appVersionSource: "remote"` and `autoIncrement: true`, so EAS increments it on
-every build. `version` in `app.json` is the marketing version and is bumped manually.
+every build. `version` in `app.json` is the marketing version and is bumped manually —
+`verify_version` exists to catch forgetting that bump.
+
+Preconditions (already set up; check these first if a release fails):
+
+- `npx eas-cli env:list --environment production` includes `EXPO_PUBLIC_API_URL`
+  pointing at the deployed backend (these `EXPO_PUBLIC_*` values are inlined at build
+  time — `.env.production` itself never reaches EAS Build, since it only uploads
+  git-tracked files).
+- Active Apple Developer Program membership, with the App Store Connect API key
+  stored in EAS.
+- `submit.production.ios.ascAppId` in `eas.json` matches the App Store Connect record.
+
+`.eas/workflows/build-preview-on-merge.yml` is separate and still runs on every push
+to `main`, producing an internal-distribution `preview` build.
 
 ## Architecture
 
