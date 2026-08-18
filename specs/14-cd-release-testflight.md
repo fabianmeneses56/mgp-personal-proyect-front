@@ -30,7 +30,8 @@ corregirlas porque cambian el punto de partida:
   GitHub: corrió en `refs/heads/main@83a76bbf2018` (merge del PR #14) y en
   `refs/heads/main@d15b64b09904`, ambas con `Trigger Type: GitHub`. Lo único
   deshabilitado es el de E2E, renombrado a `e2e-tests.txt` en `0e10ae3`
-  (EAS solo lee `.yml`/`.yaml`).
+  (EAS solo lee `.yml`/`.yaml`). Esta spec lo borra, pero por redundante y no
+  por roto: ver Alcance y Decisiones.
 - **"Build y submit manuales desde la terminal"** — a medias. El submit del
   13-ago (`2c901c12`) no se hizo con `eas submit`, sino con un workflow
   llamado `submit-ios.yaml` lanzado a mano (`Trigger Type: Other`). Ese
@@ -61,6 +62,10 @@ apuntar.
 - `CLAUDE.md` — la sección "Release (iOS / TestFlight)" pasa de describir el
   proceso manual a describir el flujo por tag, con el comando de re-corrida
   manual y las precondiciones.
+- Borrar `.eas/workflows/build-preview-on-merge.yml`. Con el release por tag
+  queda sin trabajo: reconstruía el mismo código minutos antes del build de
+  release y contra el mismo API de producción (el perfil `preview` también
+  usa `environment: production`). Ver la decisión más abajo.
 
 ### No incluye (para specs futuras)
 
@@ -115,7 +120,13 @@ El `buildNumber` de iOS sigue sin vivir en el repo: `appVersionSource:
    Verificación: la sección describe el flujo por tag y los comandos
    coinciden con el workflow.
 
-5. **Probar el release real.** Empujar `v1.0.0` (coincide con el
+5. **Borrar el workflow de preview.** `git rm
+   .eas/workflows/build-preview-on-merge.yml` y quitar sus menciones de
+   `CLAUDE.md`. Verificación: `.eas/workflows/` sólo conserva el de release y
+   el `e2e-tests.txt` deshabilitado; `grep -rn "build-preview-on-merge"` no
+   devuelve nada fuera de esta spec.
+
+6. **Probar el release real.** Empujar `v1.0.0` (coincide con el
    `expo.version` actual) y ver la corrida completa en expo.dev.
    Verificación: los tres jobs en verde y el build nuevo en TestFlight.
 
@@ -133,8 +144,8 @@ El `buildNumber` de iOS sigue sin vivir en el repo: `appVersionSource:
       `testflight` lo deja procesado en App Store Connect.
 - [ ] `npx eas-cli workflow:run release-testflight-on-tag.yml` desde una rama
       omite `verify_version` sin fallar y sigue al build.
-- [ ] Un push a `main` sin tag **no** dispara este workflow (sí el de
-      preview, que es otro).
+- [ ] Un push a `main` sin tag no dispara ningún build: este workflow sólo
+      responde a tags y el de preview ya no existe.
 - [ ] `eas.json` tiene `submit.production.ios.ascAppId` y ningún otro cambio.
 - [ ] `CLAUDE.md` describe el flujo por tag y ya no dice que el release sea
       manual.
@@ -162,8 +173,15 @@ El `buildNumber` de iOS sigue sin vivir en el repo: `appVersionSource:
   no cuando se subió el binario.
 - **Sí:** versionar el ASC App ID en `eas.json`. Es un identificador público,
   no un secreto, y sin él el submit depende de que EAS adivine o pregunte.
-- **No:** mover el workflow de preview ni tocarlo. Sirve para otra cosa
-  (build interno por merge) y funciona; si sobra, se decide aparte.
+- **Sí:** borrar `build-preview-on-merge.yml` en vez de conservarlo o moverlo
+  a la rama de integración. En este repo `main` no recibe cambios sueltos sino
+  releases ya integrados desde `dev`/`release-*`, así que el preview salía del
+  mismo código que el build de release, minutos antes y contra el mismo API.
+  La opción de moverlo a `release-*` se consideró —ahí sí sería un ensayo
+  previo al tag— pero los builds existentes nunca se instalaron: los dos que
+  hay son ambos `1.0.0 (3)`, porque el perfil `preview` no tiene
+  `autoIncrement` y nadie notó que eran indistinguibles. Se recupera de git si
+  vuelve a hacer falta.
 - **No:** generar el changelog desde los commits. Los mensajes de este repo
   no están escritos para leerse como notas de release.
 
