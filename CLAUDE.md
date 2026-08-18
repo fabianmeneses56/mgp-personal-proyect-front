@@ -139,8 +139,11 @@ Preconditions (already set up; check these first if a release fails):
   stored in EAS.
 - `submit.production.ios.ascAppId` in `eas.json` matches the App Store Connect record.
 
-`.eas/workflows/build-preview-on-merge.yml` is separate and still runs on every push
-to `main`, producing an internal-distribution `preview` build.
+Tagging is the only automated path to a build. There is deliberately no
+build-on-merge workflow: one used to run a `preview` build on every push to `main`,
+but with tag-based releases it rebuilt the same code minutes before the release
+build, against the same production API, and nobody installed the result. It was
+removed in spec 14 and is recoverable from git history.
 
 ## Architecture
 
