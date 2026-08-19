@@ -2,20 +2,18 @@ import { Redirect, Stack, router } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, AppState, View } from "react-native";
 
+import ActivityHeaderButton from "@/presentation/activity/components/ActivityHeaderButton";
 import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
-import ActivityHeaderButton from "@/presentation/activity/components/ActivityHeaderButton";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
 import DeleteExerciseHeaderButton from "@/presentation/exercises/components/DeleteExerciseHeaderButton";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const CheckAuthenticationLayout = () => {
   const { status, checkStatus } = useAuthStore();
 
-  const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
-  const primaryColor = useThemeColor({}, "primary");
+  const colors = useThemeColors();
 
   useEffect(() => {
     checkStatus();
@@ -42,10 +40,10 @@ const CheckAuthenticationLayout = () => {
           justifyContent: "center",
           alignItems: "center",
           marginBottom: 5,
-          backgroundColor,
+          backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator color={primaryColor} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -54,10 +52,10 @@ const CheckAuthenticationLayout = () => {
     return <Redirect href="/auth/login" />;
   }
 
-  // Sheets nativos (UISheetPresentationController en iOS). Con fitToContents
-  // el sheet mide lo que mide su contenido; contentStyle es obligatorio o el
-  // sheet queda transparente.
-  const sheetScreenOptions: React.ComponentProps<typeof Stack.Screen>["options"] = {
+  // native Sheets (UISheetPresentationController in iOS)
+  const sheetScreenOptions: React.ComponentProps<
+    typeof Stack.Screen
+  >["options"] = {
     presentation: "formSheet",
     headerShown: false,
     sheetAllowedDetents: "fitToContents",
@@ -65,7 +63,7 @@ const CheckAuthenticationLayout = () => {
     sheetCornerRadius: 34,
     sheetElevation: 24,
     contentStyle: {
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
     },
   };
 
@@ -75,16 +73,16 @@ const CheckAuthenticationLayout = () => {
         screenOptions={{
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: backgroundColor,
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             fontFamily: Fonts.extrabold,
             fontSize: 17,
-            color: textColor,
+            color: colors.text,
           },
-          headerTintColor: primaryColor,
+          headerTintColor: colors.primary,
           contentStyle: {
-            backgroundColor: backgroundColor,
+            backgroundColor: colors.background,
           },
         }}
       >

@@ -1,7 +1,7 @@
 import { WeightProgressChart } from "@/presentation/weight-history/components/WeightProgressChart";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -13,46 +13,41 @@ const ExerciseProgressScreen = () => {
     name?: string;
   }>();
 
-  const backgroundColor = useThemeColor({}, "background");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const faintText = useThemeColor({}, "textFaint");
-  const mutedText = useThemeColor({}, "textMuted");
-  const primaryColor = useThemeColor({}, "primary");
+  const colors = useThemeColors();
 
   const { weightHistory, isLoading, isError, refetch } = useWeightHistoryManager(
     String(exerciseId),
   );
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ThemedText type="subtitle" style={styles.title}>
         {name ? String(name) : "Progreso"}
       </ThemedText>
 
       <View
-        style={[styles.chartCard, { backgroundColor: surfaceColor, borderColor }]}
+        style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
       >
         {isLoading ? (
           <View style={styles.stateWrapper}>
-            <Text style={[styles.stateText, { color: faintText }]}>
+            <Text style={[styles.stateText, { color: colors.textFaint }]}>
               Cargando historial...
             </Text>
           </View>
         ) : isError ? (
           <View style={styles.stateWrapper}>
-            <Text style={[styles.stateText, { color: faintText }]}>
+            <Text style={[styles.stateText, { color: colors.textFaint }]}>
               No pudimos cargar el historial.
             </Text>
             <Pressable onPress={() => refetch()} hitSlop={8}>
-              <Text style={[styles.retryText, { color: primaryColor }]}>
+              <Text style={[styles.retryText, { color: colors.primary }]}>
                 Reintentar
               </Text>
             </Pressable>
           </View>
         ) : weightHistory.length < 2 ? (
           <View style={styles.stateWrapper}>
-            <Text style={[styles.stateText, { color: faintText }]}>
+            <Text style={[styles.stateText, { color: colors.textFaint }]}>
               Registra al menos 2 pesos para ver tu progreso
             </Text>
           </View>
@@ -61,7 +56,7 @@ const ExerciseProgressScreen = () => {
         )}
       </View>
 
-      <Text style={[styles.hint, { color: mutedText }]}>
+      <Text style={[styles.hint, { color: colors.textMuted }]}>
         Toca un punto de la gráfica para ver el detalle de ese registro.
       </Text>
     </View>

@@ -1,6 +1,6 @@
 import { Pressable } from "react-native";
 
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { Ionicons } from "@expo/vector-icons";
 
 interface props {
@@ -9,10 +9,10 @@ interface props {
 }
 
 const AddNewButton = ({ onPressAction, testID }: props) => {
-  const primaryColor = useThemeColor({}, "primary");
+  const colors = useThemeColors();
   return (
     <Pressable testID={testID} hitSlop={12} onPress={onPressAction}>
-      <Ionicons name="add" size={24} color={primaryColor} />
+      <Ionicons name="add" size={24} color={colors.primary} />
     </Pressable>
   );
 };

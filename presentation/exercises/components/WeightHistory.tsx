@@ -1,6 +1,6 @@
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -39,10 +39,7 @@ function HistorySkeleton({ color }: { color: string }) {
 }
 
 const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const faintText = useThemeColor({}, "textFaint");
-  const primaryColor = useThemeColor({}, "primary");
+  const colors = useThemeColors();
 
   const {
     weightHistory,
@@ -70,12 +67,12 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
   };
 
   const renderHistory = () => {
-    if (isLoading) return <HistorySkeleton color={borderColor} />;
+    if (isLoading) return <HistorySkeleton color={colors.surfaceBorder} />;
 
     if (isError)
       return (
         <View style={styles.historyErrorState}>
-          <Text style={[styles.emptyHistory, { color: faintText }]}>
+          <Text style={[styles.emptyHistory, { color: colors.textFaint }]}>
             No pudimos cargar el historial.
           </Text>
           <Pressable
@@ -84,7 +81,7 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
             accessibilityRole="button"
             accessibilityLabel="Reintentar cargar el historial"
           >
-            <Text style={[styles.retryText, { color: primaryColor }]}>
+            <Text style={[styles.retryText, { color: colors.primary }]}>
               Reintentar
             </Text>
           </Pressable>
@@ -93,7 +90,7 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
 
     if (weightHistory.length === 0)
       return (
-        <Text style={[styles.emptyHistory, { color: faintText }]}>
+        <Text style={[styles.emptyHistory, { color: colors.textFaint }]}>
           Sin registros de peso
         </Text>
       );
@@ -114,7 +111,7 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
     <View
       style={[
         styles.historyCard,
-        { backgroundColor: surfaceColor, borderColor },
+        { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
       ]}
     >
       <ThemedText type="subtitle" style={styles.historyTitle}>
@@ -129,7 +126,7 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.registerWeightButton,
-          { backgroundColor: primaryColor, opacity: pressed ? 0.85 : 1 },
+          { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
         ]}
       >
         <Text style={styles.registerWeightButtonText}>

@@ -6,7 +6,7 @@ import AddNewButton from "@/presentation/common/components/AddNewButton";
 import { useDeleteExercise } from "@/presentation/exercises/hooks/useDeleteExercise";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -34,14 +34,7 @@ const CategoryScreen = () => {
   const { remove: removeExercise, isDeleting: isDeletingExercise } =
     useDeleteExercise();
 
-  const backgroundColor = useThemeColor({}, "background");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
-  const dangerBg = useThemeColor({}, "dangerBg");
-  const dangerBorder = useThemeColor({}, "dangerBorder");
-  const dangerText = useThemeColor({}, "danger");
+  const colors = useThemeColors();
 
   const initialExercises = useMemo<Exercise[]>(() => {
     if (!data) return [];
@@ -89,7 +82,9 @@ const CategoryScreen = () => {
     showConfirm({
       title: "Eliminar categoria",
       message: `Se eliminara ${String(name ?? "esta categoria")} y ya no aparecera en tu lista.`,
-      confirmText: deleteCategoryMutation.isPending ? "Eliminando..." : "Eliminar",
+      confirmText: deleteCategoryMutation.isPending
+        ? "Eliminando..."
+        : "Eliminar",
       destructive: true,
       onConfirm: () => deleteCategoryMutation.mutate(String(id)),
     });
@@ -132,7 +127,7 @@ const CategoryScreen = () => {
               },
             ]}
           >
-            <Ionicons name="trash-outline" size={22} color={dangerText} />
+            <Ionicons name="trash-outline" size={22} color={colors.danger} />
           </Pressable>
           <AddNewButton
             testID="category-new-exercise-button"
@@ -149,7 +144,7 @@ const CategoryScreen = () => {
   }, [
     id,
     confirmDeleteCategory,
-    dangerText,
+    colors.danger,
     deleteCategoryMutation.isPending,
     hasExercises,
     name,
@@ -157,12 +152,12 @@ const CategoryScreen = () => {
   ]);
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>
           Ejercicios
         </ThemedText>
-        <ThemedText style={[styles.description, { color: mutedText }]}>
+        <ThemedText style={[styles.description, { color: colors.textMuted }]}>
           Toca una tarjeta para ver los detalles del ejercicio.
         </ThemedText>
       </View>
@@ -187,24 +182,34 @@ const CategoryScreen = () => {
           <RefreshControl
             refreshing={categoriesQuery.isRefetching}
             onRefresh={() => categoriesQuery.refetch()}
-            tintColor={primaryColor}
+            tintColor={colors.primary}
           />
         }
         ListFooterComponent={
           <View
             style={[
               styles.dangerZone,
-              { backgroundColor: dangerBg, borderColor: dangerBorder },
+              {
+                backgroundColor: colors.dangerBg,
+                borderColor: colors.dangerBorder,
+              },
             ]}
           >
             <View style={styles.dangerZoneHeader}>
-              <Ionicons name="warning-outline" size={20} color={dangerText} />
-              <Text style={[styles.dangerZoneTitle, { color: dangerText }]}>
+              <Ionicons
+                name="warning-outline"
+                size={20}
+                color={colors.danger}
+              />
+              <Text style={[styles.dangerZoneTitle, { color: colors.danger }]}>
                 Zona de peligro
               </Text>
             </View>
             <ThemedText
-              style={[styles.dangerZoneDescription, { color: mutedText }]}
+              style={[
+                styles.dangerZoneDescription,
+                { color: colors.textMuted },
+              ]}
             >
               {hasExercises
                 ? "Elimina primero todos los ejercicios de esta categoria para poder eliminarla."
@@ -216,7 +221,7 @@ const CategoryScreen = () => {
               style={({ pressed }) => [
                 styles.deleteCategoryButton,
                 {
-                  backgroundColor: dangerText,
+                  backgroundColor: colors.danger,
                   opacity: hasExercises
                     ? 0.4
                     : pressed || deleteCategoryMutation.isPending
@@ -237,13 +242,18 @@ const CategoryScreen = () => {
           <View
             style={[
               styles.emptyState,
-              { backgroundColor: surfaceColor, borderColor },
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+              },
             ]}
           >
             <ThemedText type="subtitle" style={styles.emptyTitle}>
               No hay ejercicios en esta categoria
             </ThemedText>
-            <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
+            <ThemedText
+              style={[styles.emptyDescription, { color: colors.textMuted }]}
+            >
               Cuando agregues ejercicios, apareceran aqui en tarjetas listas
               para abrir sus detalles.
             </ThemedText>

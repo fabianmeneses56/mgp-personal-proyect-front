@@ -5,48 +5,54 @@
 
 import { Platform } from "react-native";
 
-export const Colors = {
-  light: {
-    text: "#101116",
-    textMuted: "#71757F",
-    textFaint: "#9A9EA8",
-    background: "#FFFFFF",
-    surface: "#F5F6F8",
-    surfaceBorder: "rgba(16,17,22,0.06)",
-    surfaceBorderStrong: "rgba(16,17,22,0.10)",
-    tint: "#4B5BF5",
-    icon: "#71757F",
-    tabIconDefault: "#71757F",
-    tabIconSelected: "#4B5BF5",
+const light = {
+  text: "#101116",
+  textMuted: "#71757F",
+  textFaint: "#9A9EA8",
+  background: "#FFFFFF",
+  surface: "#F5F6F8",
+  surfaceBorder: "rgba(16,17,22,0.06)",
+  surfaceBorderStrong: "rgba(16,17,22,0.10)",
+  tint: "#4B5BF5",
+  icon: "#71757F",
+  tabIconDefault: "#71757F",
+  tabIconSelected: "#4B5BF5",
 
-    primary: "#4B5BF5",
-    primarySoft: "#ECEEFE",
-    danger: "#E5484D",
-    dangerBg: "#FDECEC",
-    dangerBorder: "#F8CBCC",
-    sheetHandle: "#E1E2E6",
-  },
-  dark: {
-    text: "#F4F5F7",
-    textMuted: "#9A9EA8",
-    textFaint: "#6A6E78",
-    background: "#0B0C0F",
-    surface: "#16171C",
-    surfaceBorder: "rgba(255,255,255,0.07)",
-    surfaceBorderStrong: "rgba(255,255,255,0.12)",
-    tint: "#7D8BFF",
-    icon: "#9A9EA8",
-    tabIconDefault: "#9A9EA8",
-    tabIconSelected: "#7D8BFF",
-
-    primary: "#7D8BFF",
-    primarySoft: "rgba(125,139,255,0.15)",
-    danger: "#FF6B70",
-    dangerBg: "rgba(229,72,77,0.16)",
-    dangerBorder: "rgba(229,72,77,0.3)",
-    sheetHandle: "#2C2E34",
-  },
+  primary: "#4B5BF5",
+  primarySoft: "#ECEEFE",
+  danger: "#E5484D",
+  dangerBg: "#FDECEC",
+  dangerBorder: "#F8CBCC",
+  sheetHandle: "#E1E2E6",
 };
+
+/** Paleta de un esquema. `dark` se tipa con esto para que el compilador
+ *  exija que ambos esquemas definan exactamente los mismos tokens. */
+export type ThemeColors = typeof light;
+export type ThemeColorName = keyof ThemeColors;
+
+const dark: ThemeColors = {
+  text: "#F4F5F7",
+  textMuted: "#9A9EA8",
+  textFaint: "#6A6E78",
+  background: "#0B0C0F",
+  surface: "#16171C",
+  surfaceBorder: "rgba(255,255,255,0.07)",
+  surfaceBorderStrong: "rgba(255,255,255,0.12)",
+  tint: "#7D8BFF",
+  icon: "#9A9EA8",
+  tabIconDefault: "#9A9EA8",
+  tabIconSelected: "#7D8BFF",
+
+  primary: "#7D8BFF",
+  primarySoft: "rgba(125,139,255,0.15)",
+  danger: "#FF6B70",
+  dangerBg: "rgba(229,72,77,0.16)",
+  dangerBorder: "rgba(229,72,77,0.3)",
+  sheetHandle: "#2C2E34",
+};
+
+export const Colors = { light, dark };
 
 export const Fonts = Platform.select({
   ios: {

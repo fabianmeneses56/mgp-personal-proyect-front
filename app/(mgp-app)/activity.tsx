@@ -13,31 +13,35 @@ import { useActivity } from "@/presentation/activity/hooks/useActivity";
 import { groupActivityByDay } from "@/presentation/activity/utils/group-activity-by-day";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const ActivityScreen = () => {
   const { activityQuery } = useActivity();
 
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const backgroundColor = useThemeColor({}, "background");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
+  const colors = useThemeColors();
 
   if (activityQuery.isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor }]}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <View
           style={[
             styles.loadingCard,
-            { backgroundColor: surfaceColor, borderColor },
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceBorder,
+            },
           ]}
         >
-          <ActivityIndicator size={32} color={primaryColor} />
+          <ActivityIndicator size={32} color={colors.primary} />
           <ThemedText type="subtitle" style={styles.loadingTitle}>
             Cargando actividad
           </ThemedText>
-          <ThemedText style={[styles.loadingText, { color: mutedText }]}>
+          <ThemedText style={[styles.loadingText, { color: colors.textMuted }]}>
             Estamos trayendo tus últimos movimientos.
           </ThemedText>
         </View>
@@ -48,7 +52,7 @@ const ActivityScreen = () => {
   const sections = groupActivityByDay(activityQuery.data ?? []);
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -59,24 +63,32 @@ const ActivityScreen = () => {
           <RefreshControl
             refreshing={activityQuery.isRefetching}
             onRefresh={() => activityQuery.refetch()}
-            tintColor={primaryColor}
+            tintColor={colors.primary}
           />
         }
         renderSectionHeader={({ section }) => (
-          <Text style={[styles.sectionTitle, { color: mutedText }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
             {section.title}
           </Text>
         )}
         renderItem={({ item }) => <ActivityRow item={item} />}
         ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: borderColor }]} />
+          <View
+            style={[
+              styles.separator,
+              { backgroundColor: colors.surfaceBorder },
+            ]}
+          />
         )}
         ListEmptyComponent={
           activityQuery.isError ? (
             <View
               style={[
                 styles.emptyState,
-                { backgroundColor: surfaceColor, borderColor },
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                },
               ]}
             >
               <ThemedText type="subtitle" style={styles.emptyTitle}>
@@ -87,7 +99,7 @@ const ActivityScreen = () => {
                 hitSlop={8}
                 style={styles.retryButton}
               >
-                <Text style={[styles.retryText, { color: primaryColor }]}>
+                <Text style={[styles.retryText, { color: colors.primary }]}>
                   Reintentar
                 </Text>
               </Pressable>
@@ -96,15 +108,20 @@ const ActivityScreen = () => {
             <View
               style={[
                 styles.emptyState,
-                { backgroundColor: surfaceColor, borderColor },
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                },
               ]}
             >
               <ThemedText type="subtitle" style={styles.emptyTitle}>
                 Aún no hay actividad
               </ThemedText>
-              <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
-                Crea o edita una categoría, un ejercicio o un registro de peso
-                y aparecerá aquí.
+              <ThemedText
+                style={[styles.emptyDescription, { color: colors.textMuted }]}
+              >
+                Crea o edita una categoría, un ejercicio o un registro de peso y
+                aparecerá aquí.
               </ThemedText>
             </View>
           )

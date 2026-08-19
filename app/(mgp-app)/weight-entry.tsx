@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -14,7 +21,7 @@ import SheetScreen from "@/presentation/theme/components/SheetScreen";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const WEIGHT_UNITS = ["kg", "lb"];
 
@@ -30,24 +37,17 @@ const WeightEntryScreen = () => {
   const { exerciseId, entryId } = params;
   const isEditing = !!entryId;
 
-  const { saveEntry, isSaving } = useWeightHistoryManager(
-    String(exerciseId)
-  );
+  const { saveEntry, isSaving } = useWeightHistoryManager(String(exerciseId));
 
   const [weight, setWeight] = useState(params.weight ?? "");
   const [weightUnit, setWeightUnit] = useState(params.weightUnit || "kg");
   const [note, setNote] = useState(params.note ?? "");
   const [date, setDate] = useState(() =>
-    params.date ? new Date(params.date) : new Date()
+    params.date ? new Date(params.date) : new Date(),
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
-  const faintText = useThemeColor({}, "textFaint");
-  const textColor = useThemeColor({}, "text");
+  const colors = useThemeColors();
 
   const toggleDatePicker = () => {
     Keyboard.dismiss();
@@ -56,7 +56,7 @@ const WeightEntryScreen = () => {
 
   const handleChangeDate = (
     event: DateTimePickerEvent,
-    selectedDate?: Date
+    selectedDate?: Date,
   ) => {
     if (Platform.OS === "android") {
       setShowDatePicker(false);
@@ -108,20 +108,25 @@ const WeightEntryScreen = () => {
         autoFocus
       />
 
-      <View style={[styles.unitToggle, { backgroundColor: borderColor }]}>
+      <View
+        style={[styles.unitToggle, { backgroundColor: colors.surfaceBorder }]}
+      >
         {WEIGHT_UNITS.map((unit) => (
           <Pressable
             key={unit}
             onPress={() => setWeightUnit(unit)}
             style={[
               styles.unitOption,
-              weightUnit === unit && { backgroundColor: surfaceColor },
+              weightUnit === unit && { backgroundColor: colors.surface },
             ]}
           >
             <Text
               style={[
                 styles.unitOptionText,
-                { color: weightUnit === unit ? primaryColor : faintText },
+                {
+                  color:
+                    weightUnit === unit ? colors.primary : colors.textFaint,
+                },
               ]}
             >
               {unit.toUpperCase()}
@@ -139,15 +144,23 @@ const WeightEntryScreen = () => {
 
       <Pressable
         onPress={toggleDatePicker}
-        style={[styles.dateField, { backgroundColor: surfaceColor, borderColor }]}
+        style={[
+          styles.dateField,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.surfaceBorder,
+          },
+        ]}
       >
         <View>
-          <Text style={[styles.dateFieldLabel, { color: faintText }]}>Fecha</Text>
-          <Text style={[styles.dateFieldValue, { color: textColor }]}>
+          <Text style={[styles.dateFieldLabel, { color: colors.textFaint }]}>
+            Fecha
+          </Text>
+          <Text style={[styles.dateFieldValue, { color: colors.text }]}>
             {date.toLocaleDateString()}
           </Text>
         </View>
-        <Ionicons name="calendar-outline" size={20} color={faintText} />
+        <Ionicons name="calendar-outline" size={20} color={colors.textFaint} />
       </Pressable>
 
       {showDatePicker && Platform.OS === "ios" ? (
@@ -192,7 +205,9 @@ const WeightEntryScreen = () => {
         onPress={() => router.back()}
         disabled={isSaving}
       >
-        <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+        <Text style={[styles.cancelText, { color: colors.textMuted }]}>
+          Cancelar
+        </Text>
       </Pressable>
     </SheetScreen>
   );

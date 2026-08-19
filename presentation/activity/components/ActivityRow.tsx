@@ -7,7 +7,7 @@ import {
 } from "@/core/activity/interfaces/activity.interface";
 import { toDisplayWeight } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const ACTIVITY_ICON: Record<ActivityType, keyof typeof Ionicons.glyphMap> = {
   category: "folder-outline",
@@ -40,7 +40,9 @@ function buildPhraseParts(item: ActivityItem): PhrasePart[] {
 
   if (item.type === "exercise") {
     const verb =
-      item.action === "created" ? "Creaste el ejercicio" : "Editaste el ejercicio";
+      item.action === "created"
+        ? "Creaste el ejercicio"
+        : "Editaste el ejercicio";
     return [
       { text: `${verb} `, bold: false },
       { text: item.description, bold: true },
@@ -71,31 +73,31 @@ interface Props {
 }
 
 const ActivityRow = ({ item }: Props) => {
-  const primaryColor = useThemeColor({}, "primary");
-  const primarySoft = useThemeColor({}, "primarySoft");
-  const textColor = useThemeColor({}, "text");
-  const faintText = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   const phraseParts = buildPhraseParts(item);
 
   return (
     <View style={styles.row}>
-      <View style={[styles.iconCircle, { backgroundColor: primarySoft }]}>
-        <Ionicons name={ACTIVITY_ICON[item.type]} size={18} color={primaryColor} />
+      <View
+        style={[styles.iconCircle, { backgroundColor: colors.primarySoft }]}
+      >
+        <Ionicons
+          name={ACTIVITY_ICON[item.type]}
+          size={18}
+          color={colors.primary}
+        />
       </View>
 
-      <Text style={[styles.phrase, { color: textColor }]}>
+      <Text style={[styles.phrase, { color: colors.text }]}>
         {phraseParts.map((part, index) => (
-          <Text
-            key={index}
-            style={part.bold ? styles.phraseBold : undefined}
-          >
+          <Text key={index} style={part.bold ? styles.phraseBold : undefined}>
             {part.text}
           </Text>
         ))}
       </Text>
 
-      <Text style={[styles.time, { color: faintText }]}>
+      <Text style={[styles.time, { color: colors.textFaint }]}>
         {formatTime(item.createdAt)}
       </Text>
     </View>

@@ -162,8 +162,22 @@ The codebase follows a layered structure that cuts across `core/`, `presentation
   - `presentation/<feature>/hooks/` — React Query wrappers around `core/<feature>/actions` (e.g. `useCategories` = `useQuery`, `useCategory` = `useMutation` that creates/updates a category and invalidates the `["categories"]` query key on success).
   - `presentation/activity/` — `useActivity` (`useQuery` on `["activity"]`, wraps `core/activity/actions/get-activity.action.ts`), `utils/group-activity-by-day.ts` (groups items into "Hoy"/"Ayer"/date sections by local day), and the `ActivityRow`/`ActivityHeaderButton` components consumed by `app/(mgp-app)/activity.tsx`.
   - `presentation/auth/store/useAuthStore.ts` — Zustand store holding `status` (`"checking" | "authenticated" | "unauthenticated"`), `user`, `token`. `checkStatus()` calls `authCheckStatus()` against `/auth/check-status` on app mount; `login()` and `logout()` go through `changeStatus()`, which is also responsible for persisting/clearing the token via `SecureStorageAdapter`.
-  - `presentation/theme/` — design primitives shared across the app: `Themed*` components (`ThemedText`, `ThemedView`, `ThemedButton`, `ThemedTextInput`), `use-theme-color`/`use-color-scheme` hooks that read from `constants/theme.ts` (`Colors.light` / `Colors.dark`), and platform-specific files (e.g. `use-color-scheme.web.ts`).
+  - `presentation/theme/` — design primitives shared across the app: `Themed*` components (`ThemedText`, `ThemedView`, `ThemedButton`, `ThemedTextInput`), the color hooks described below, and platform-specific files (e.g. `use-color-scheme.web.ts`).
 - **`helpers/adapters/secure-storage.adapter.ts`** — `SecureStorageAdapter` wraps `expo-secure-store` with an in-memory cache layer; this is the only place auth tokens are persisted/read.
+
+### Reading theme colors
+
+`const colors = useThemeColors()` returns the whole palette for the active scheme in one
+call. Reference tokens by their canonical name (`colors.textMuted`) — don't alias them
+into local variables. The returned object is a module-level constant, so it is stable as
+a `useMemo`/`useCallback` dependency.
+
+In `constants/theme.ts` the `light` object defines the shape: `ThemeColors` is derived
+from it and `dark` is typed with it, so a token missing from either scheme fails to
+compile.
+
+`useThemeColor(props, token)` remains only for the `light`/`dark` prop override, used
+just by `ThemedText` and `ThemedView`.
 
 ### Data flow pattern
 

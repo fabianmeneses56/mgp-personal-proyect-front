@@ -11,7 +11,7 @@ import {
 
 import { useRef, useState } from "react";
 import { Fonts } from "../fonts";
-import { useThemeColor } from "../hooks/use-theme-color";
+import { useThemeColors } from "../hooks/use-theme-colors";
 
 interface Props extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -25,11 +25,7 @@ const ThemedTextInput = ({
   secureToggle = false,
   ...rest
 }: Props) => {
-  const primaryColor = useThemeColor({}, "primary");
-  const textColor = useThemeColor({}, "text");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const placeholderColor = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   const [isActive, setIsActive] = useState(false);
   const [isSecure, setIsSecure] = useState(true);
@@ -40,8 +36,8 @@ const ThemedTextInput = ({
       style={[
         styles.border,
         {
-          backgroundColor: surfaceColor,
-          borderColor: isActive ? primaryColor : borderColor,
+          backgroundColor: colors.surface,
+          borderColor: isActive ? colors.primary : colors.surfaceBorder,
           borderWidth: isActive ? 1.5 : 1,
         },
         style as StyleProp<ViewStyle>,
@@ -52,18 +48,18 @@ const ThemedTextInput = ({
         <Ionicons
           name={icon}
           size={20}
-          color={placeholderColor}
+          color={colors.textFaint}
           style={{ marginRight: 12 }}
         />
       )}
 
       <TextInput
         ref={inputRef}
-        placeholderTextColor={placeholderColor}
+        placeholderTextColor={colors.textFaint}
         onFocus={() => setIsActive(true)}
         onBlur={() => setIsActive(false)}
         style={{
-          color: textColor,
+          color: colors.text,
           fontFamily: Fonts.semibold,
           fontSize: 15.5,
           marginRight: 10,
@@ -84,7 +80,7 @@ const ThemedTextInput = ({
           <Ionicons
             name={isSecure ? "eye-outline" : "eye-off-outline"}
             size={20}
-            color={isSecure ? placeholderColor : primaryColor}
+            color={isSecure ? colors.textFaint : colors.primary}
           />
         </Pressable>
       )}

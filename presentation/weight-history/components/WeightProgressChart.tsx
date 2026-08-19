@@ -1,6 +1,6 @@
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { StyleSheet, Text, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { sortStrategies } from "../utils/sort-strategies";
@@ -65,12 +65,7 @@ export function WeightProgressChart({
   entries,
   variant,
 }: WeightProgressChartProps) {
-  const primaryColor = useThemeColor({}, "primary");
-  const primarySoft = useThemeColor({}, "primarySoft");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const textColor = useThemeColor({}, "text");
-  const faintText = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   const points = toChartPoints(entries);
   const values = points.map((point) => point.value);
@@ -83,9 +78,9 @@ export function WeightProgressChart({
         height={80}
         curved
         areaChart
-        color={primaryColor}
-        startFillColor={primaryColor}
-        endFillColor={primaryColor}
+        color={colors.primary}
+        startFillColor={colors.primary}
+        endFillColor={colors.primary}
         startOpacity={0.3}
         endOpacity={0}
         thickness={2.5}
@@ -110,32 +105,32 @@ export function WeightProgressChart({
       height={260}
       curved
       areaChart
-      color={primaryColor}
-      startFillColor={primaryColor}
-      endFillColor={primaryColor}
+      color={colors.primary}
+      startFillColor={colors.primary}
+      endFillColor={colors.primary}
       startOpacity={0.25}
       endOpacity={0}
       thickness={2.5}
-      dataPointsColor={primaryColor}
+      dataPointsColor={colors.primary}
       yAxisTextStyle={{
-        color: faintText,
+        color: colors.textFaint,
         fontFamily: Fonts.medium,
         fontSize: 11,
       }}
       xAxisLabelTextStyle={{
-        color: faintText,
+        color: colors.textFaint,
         fontFamily: Fonts.medium,
         fontSize: 11,
       }}
-      xAxisColor={borderColor}
-      yAxisColor={borderColor}
-      rulesColor={borderColor}
+      xAxisColor={colors.surfaceBorder}
+      yAxisColor={colors.surfaceBorder}
+      rulesColor={colors.surfaceBorder}
       yAxisOffset={minValue > 2 ? minValue - 2 : 0}
       yAxisLabelSuffix=" kg"
       showScrollIndicator
       pointerConfig={{
-        pointerColor: primaryColor,
-        pointerStripColor: primarySoft,
+        pointerColor: colors.primary,
+        pointerStripColor: colors.primarySoft,
         pointerStripWidth: 2,
         radius: 5,
         pointerLabelWidth: 140,
@@ -145,9 +140,9 @@ export function WeightProgressChart({
         pointerLabelComponent: (items: WeightChartPoint[]) => (
           <TooltipLabel
             point={items[0]}
-            textColor={textColor}
-            surfaceColor={surfaceColor}
-            borderColor={borderColor}
+            textColor={colors.text}
+            surfaceColor={colors.surface}
+            borderColor={colors.surfaceBorder}
           />
         ),
       }}

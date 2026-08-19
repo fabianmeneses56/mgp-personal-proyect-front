@@ -2,7 +2,7 @@ import { Pressable, StyleSheet } from "react-native";
 
 import { showConfirm } from "@/helpers/alerts/alert.service";
 import { useExerciseActions } from "@/presentation/exercises/hooks/useExerciseActions";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { Ionicons } from "@expo/vector-icons";
 
 interface props {
@@ -11,7 +11,7 @@ interface props {
 }
 
 const DeleteExerciseHeaderButton = ({ exerciseId, name }: props) => {
-  const dangerText = useThemeColor({}, "danger");
+  const colors = useThemeColors();
   const { remove, isDeleting } = useExerciseActions(exerciseId, name);
 
   const confirmDeleteExercise = () => {
@@ -34,7 +34,7 @@ const DeleteExerciseHeaderButton = ({ exerciseId, name }: props) => {
         { opacity: pressed || isDeleting ? 0.75 : 1 },
       ]}
     >
-      <Ionicons name="trash-outline" size={22} color={dangerText} />
+      <Ionicons name="trash-outline" size={22} color={colors.danger} />
     </Pressable>
   );
 };

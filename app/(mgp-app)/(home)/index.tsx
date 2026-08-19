@@ -13,30 +13,36 @@ import * as Haptics from "expo-haptics";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import { Fonts } from "@/presentation/theme/fonts";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { router } from "expo-router";
 
 const HomeScreen = () => {
   const { categoriesQuery } = useCategories();
 
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const backgroundColor = useThemeColor({}, "background");
-  const primaryColor = useThemeColor({}, "primary");
-  const textColor = useThemeColor({}, "text");
-  const primarySoft = useThemeColor({}, "primarySoft");
-  const mutedText = useThemeColor({}, "textMuted");
-  const faintText = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   if (categoriesQuery.isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor }]}>
-        <View style={[styles.loadingCard, { backgroundColor: surfaceColor, borderColor }]}>
-          <ActivityIndicator size={32} color={primaryColor} />
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <View
+          style={[
+            styles.loadingCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceBorder,
+            },
+          ]}
+        >
+          <ActivityIndicator size={32} color={colors.primary} />
           <ThemedText type="subtitle" style={styles.loadingTitle}>
             Cargando categorias
           </ThemedText>
-          <ThemedText style={[styles.loadingText, { color: mutedText }]}>
+          <ThemedText style={[styles.loadingText, { color: colors.textMuted }]}>
             Estamos preparando tu espacio de entrenamiento.
           </ThemedText>
         </View>
@@ -47,7 +53,7 @@ const HomeScreen = () => {
   const categories = categoriesQuery.data ?? [];
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={categories}
         keyExtractor={(category) => category.id}
@@ -57,38 +63,76 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={categoriesQuery.isRefetching}
             onRefresh={() => categoriesQuery.refetch()}
-            tintColor={primaryColor}
+            tintColor={colors.primary}
           />
         }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <View style={[styles.heroCard, { backgroundColor: surfaceColor, borderColor }]}>
-              <View style={[styles.heroBadge, { backgroundColor: primarySoft }]}>
-                <Text style={[styles.heroBadgeText, { color: primaryColor }]}>Rutina</Text>
+            <View
+              style={[
+                styles.heroCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.heroBadge,
+                  { backgroundColor: colors.primarySoft },
+                ]}
+              >
+                <Text style={[styles.heroBadgeText, { color: colors.primary }]}>
+                  Rutina
+                </Text>
               </View>
 
               <ThemedText type="title" style={styles.heroTitle}>
                 Tus categorias
               </ThemedText>
 
-              <ThemedText style={[styles.heroDescription, { color: mutedText }]}>
-                Organiza tus ejercicios por grupo y entra rapido a cada categoria.
+              <ThemedText
+                style={[styles.heroDescription, { color: colors.textMuted }]}
+              >
+                Organiza tus ejercicios por grupo y entra rapido a cada
+                categoria.
               </ThemedText>
 
               <View style={styles.statsRow}>
-                <View style={[styles.statCard, { backgroundColor, borderColor }]}>
-                  <Text style={[styles.statLabel, { color: faintText }]}>Categorias</Text>
-                  <Text style={[styles.statValue, { color: textColor }]}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.surfaceBorder,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statLabel, { color: colors.textFaint }]}>
+                    Categorias
+                  </Text>
+                  <Text style={[styles.statValue, { color: colors.text }]}>
                     {categories.length}
                   </Text>
                 </View>
 
-                <View style={[styles.statCard, { backgroundColor, borderColor }]}>
-                  <Text style={[styles.statLabel, { color: faintText }]}>Ejercicios</Text>
-                  <Text style={[styles.statValue, { color: textColor }]}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.surfaceBorder,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statLabel, { color: colors.textFaint }]}>
+                    Ejercicios
+                  </Text>
+                  <Text style={[styles.statValue, { color: colors.text }]}>
                     {categories.reduce(
                       (total, category) => total + category.exercise.length,
-                      0
+                      0,
                     )}
                   </Text>
                 </View>
@@ -97,7 +141,9 @@ const HomeScreen = () => {
 
             <View style={styles.sectionHeader}>
               <ThemedText type="subtitle">Explora categorias</ThemedText>
-              <ThemedText style={[styles.sectionHint, { color: faintText }]}>
+              <ThemedText
+                style={[styles.sectionHint, { color: colors.textFaint }]}
+              >
                 Toca una tarjeta para ver sus ejercicios.
               </ThemedText>
             </View>
@@ -120,14 +166,22 @@ const HomeScreen = () => {
             style={({ pressed }) => [
               styles.categoryCard,
               {
-                backgroundColor: surfaceColor,
-                borderColor,
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
                 opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <View style={[styles.indexBadge, { backgroundColor, borderColor }]}>
-              <Text style={[styles.indexBadgeText, { color: primaryColor }]}>
+            <View
+              style={[
+                styles.indexBadge,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.surfaceBorder,
+                },
+              ]}
+            >
+              <Text style={[styles.indexBadgeText, { color: colors.primary }]}>
                 {index + 1}
               </Text>
             </View>
@@ -140,20 +194,40 @@ const HomeScreen = () => {
               >
                 {item.name}
               </ThemedText>
-              <Text style={[styles.categoryMeta, { color: faintText }]}>
+              <Text style={[styles.categoryMeta, { color: colors.textFaint }]}>
                 {item.exercise.length}{" "}
                 {item.exercise.length === 1 ? "ejercicio" : "ejercicios"}
               </Text>
             </View>
 
-            <View style={[styles.chevronCircle, { backgroundColor, borderColor }]}>
-              <Ionicons name="chevron-forward" size={16} color={faintText} />
+            <View
+              style={[
+                styles.chevronCircle,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.surfaceBorder,
+                },
+              ]}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={colors.textFaint}
+              />
             </View>
           </Pressable>
         )}
         ListEmptyComponent={
           categoriesQuery.isError ? (
-            <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
+            <View
+              style={[
+                styles.emptyState,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                },
+              ]}
+            >
               <ThemedText type="subtitle" style={styles.emptyTitle}>
                 No pudimos cargar tus categorias.
               </ThemedText>
@@ -162,17 +236,27 @@ const HomeScreen = () => {
                 hitSlop={8}
                 style={styles.retryButton}
               >
-                <Text style={[styles.retryText, { color: primaryColor }]}>
+                <Text style={[styles.retryText, { color: colors.primary }]}>
                   Reintentar
                 </Text>
               </Pressable>
             </View>
           ) : (
-            <View style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor }]}>
+            <View
+              style={[
+                styles.emptyState,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                },
+              ]}
+            >
               <ThemedText type="subtitle" style={styles.emptyTitle}>
                 Aun no hay categorias
               </ThemedText>
-              <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
+              <ThemedText
+                style={[styles.emptyDescription, { color: colors.textMuted }]}
+              >
                 Crea tu primera categoria con el boton superior para empezar a
                 organizar tus ejercicios.
               </ThemedText>

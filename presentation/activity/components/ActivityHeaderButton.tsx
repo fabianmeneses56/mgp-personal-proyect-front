@@ -3,10 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const ActivityHeaderButton = () => {
-  const primaryColor = useThemeColor({}, "primary");
+  const colors = useThemeColors();
 
   return (
     <Pressable
@@ -17,7 +17,7 @@ const ActivityHeaderButton = () => {
         router.navigate("/activity");
       }}
     >
-      <Ionicons name="time-outline" size={24} color={primaryColor} />
+      <Ionicons name="time-outline" size={24} color={colors.primary} />
     </Pressable>
   );
 };

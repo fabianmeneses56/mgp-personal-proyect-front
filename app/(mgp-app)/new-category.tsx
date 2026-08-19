@@ -11,15 +11,14 @@ import SheetScreen from "@/presentation/theme/components/SheetScreen";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const NewCategoryScreen = () => {
   const [formValue, setFormValue] = useState("");
   const { productMutation } = useCategory("new");
   const queryClient = useQueryClient();
 
-  const mutedText = useThemeColor({}, "textMuted");
-  const faintText = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   const handleSubmit = async () => {
     const trimmedName = formValue.trim();
@@ -35,14 +34,11 @@ const NewCategoryScreen = () => {
 
     const isDuplicate = cachedCategories?.some(
       (category) =>
-        category.name.trim().toLowerCase() === trimmedName.toLowerCase()
+        category.name.trim().toLowerCase() === trimmedName.toLowerCase(),
     );
 
     if (isDuplicate) {
-      showAlert(
-        "Nombre duplicado",
-        "Ya existe una categoria con ese nombre."
-      );
+      showAlert("Nombre duplicado", "Ya existe una categoria con ese nombre.");
       return;
     }
 
@@ -58,7 +54,7 @@ const NewCategoryScreen = () => {
         "Error",
         error instanceof Error
           ? error.message
-          : "No se pudo guardar la categoria."
+          : "No se pudo guardar la categoria.",
       );
     }
   };
@@ -68,11 +64,15 @@ const NewCategoryScreen = () => {
       <ThemedText type="subtitle" style={styles.modalTitle}>
         Nueva categoria
       </ThemedText>
-      <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
+      <ThemedText
+        style={[styles.modalDescription, { color: colors.textMuted }]}
+      >
         Dale un nombre claro para encontrar mas rapido tus ejercicios.
       </ThemedText>
 
-      <Text style={[styles.fieldLabel, { color: faintText }]}>Nombre</Text>
+      <Text style={[styles.fieldLabel, { color: colors.textFaint }]}>
+        Nombre
+      </Text>
       <ThemedTextInput
         testID="new-category-name-input"
         placeholder="Nombre de la categoria"
@@ -94,7 +94,9 @@ const NewCategoryScreen = () => {
       </View>
 
       <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+        <Text style={[styles.cancelText, { color: colors.textMuted }]}>
+          Cancelar
+        </Text>
       </Pressable>
     </SheetScreen>
   );
