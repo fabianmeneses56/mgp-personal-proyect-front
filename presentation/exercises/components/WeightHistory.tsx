@@ -1,3 +1,4 @@
+import ErrorState from "@/presentation/common/components/ErrorState";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
@@ -71,21 +72,12 @@ const WeightHistory = ({ exerciseId }: { exerciseId: string }) => {
 
     if (isError)
       return (
-        <View style={styles.historyErrorState}>
-          <Text style={[styles.emptyHistory, { color: colors.textFaint }]}>
-            No pudimos cargar el historial.
-          </Text>
-          <Pressable
-            onPress={() => refetch()}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Reintentar cargar el historial"
-          >
-            <Text style={[styles.retryText, { color: colors.primary }]}>
-              Reintentar
-            </Text>
-          </Pressable>
-        </View>
+        <ErrorState
+          variant="inline"
+          message="No pudimos cargar el historial."
+          onRetry={() => refetch()}
+          retryAccessibilityLabel="Reintentar cargar el historial"
+        />
       );
 
     if (weightHistory.length === 0)
@@ -155,15 +147,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
     textAlign: "center",
     paddingVertical: 8,
-  },
-  historyErrorState: {
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 4,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 13.5,
   },
   historyCard: {
     borderWidth: 1,

@@ -3,6 +3,7 @@ import { Exercise } from "@/core/categories/interfaces/category.interface";
 import RenderExerciseCard from "@/presentation/categories/components/RenderExerciseCard";
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
 import AddNewButton from "@/presentation/common/components/AddNewButton";
+import EmptyState from "@/presentation/common/components/EmptyState";
 import { useDeleteExercise } from "@/presentation/exercises/hooks/useDeleteExercise";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
@@ -239,25 +240,10 @@ const CategoryScreen = () => {
           </View>
         }
         ListEmptyComponent={
-          <View
-            style={[
-              styles.emptyState,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.surfaceBorder,
-              },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.emptyTitle}>
-              No hay ejercicios en esta categoria
-            </ThemedText>
-            <ThemedText
-              style={[styles.emptyDescription, { color: colors.textMuted }]}
-            >
-              Cuando agregues ejercicios, apareceran aqui en tarjetas listas
-              para abrir sus detalles.
-            </ThemedText>
-          </View>
+          <EmptyState
+            title="No hay ejercicios en esta categoria"
+            description="Cuando agregues ejercicios, apareceran aqui en tarjetas listas para abrir sus detalles."
+          />
         }
         showsVerticalScrollIndicator={false}
       />
@@ -302,21 +288,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  emptyState: {
-    borderWidth: 1,
-    borderRadius: 26,
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-    alignItems: "center",
-    gap: 10,
-  },
-  emptyTitle: {
-    textAlign: "center",
-  },
-  emptyDescription: {
-    textAlign: "center",
-    lineHeight: 22,
-  },
   dangerZone: {
     borderWidth: 1,
     borderRadius: 26,
