@@ -98,10 +98,16 @@ export const useWeightHistoryManager = (
     onError: (error: Error) => showAlert("Error", error.message),
   });
 
-  const saveEntry = (payload: CreateWeightHistoryPayload, entryId?: string) =>
+  // Fire-and-forget like removeEntry: each mutation's onError is the only place
+  // that reports a failure, so callers just declare success through options.
+  const saveEntry = (
+    payload: CreateWeightHistoryPayload,
+    entryId?: string,
+    options?: { onSuccess?: () => void },
+  ) =>
     entryId
-      ? updateMutation.mutateAsync({ entryId, payload })
-      : createMutation.mutateAsync(payload);
+      ? updateMutation.mutate({ entryId, payload }, options)
+      : createMutation.mutate(payload, options);
 
   const removeEntry = (entryId: string) => removeMutation.mutate({ entryId });
 

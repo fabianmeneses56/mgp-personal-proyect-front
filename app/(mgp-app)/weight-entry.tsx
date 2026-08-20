@@ -1,4 +1,10 @@
-import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import * as Haptics from "expo-haptics";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import {
   Keyboard,
   Platform,
@@ -7,21 +13,15 @@ import {
   Text,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
-import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
 
 import { showAlert } from "@/helpers/alerts/alert.service";
-import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
-import { Fonts } from "@/presentation/theme/fonts";
 import SheetScreen from "@/presentation/theme/components/SheetScreen";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
+import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
+import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 
 const WEIGHT_UNITS = ["kg", "lb"];
 
@@ -66,7 +66,7 @@ const WeightEntryScreen = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const normalizedWeight = weight.trim().replace(",", ".");
     const parsedWeight = Number(normalizedWeight);
 
@@ -82,15 +82,12 @@ const WeightEntryScreen = () => {
       date: date.toISOString(),
     };
 
-    try {
-      await saveEntry(payload, entryId);
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
-    } catch {
-      // El Alert de error ya lo dispara useWeightHistoryManager (onError de la mutacion);
-      // el modal permanece abierto para que el usuario pueda reintentar.
-    }
+    saveEntry(payload, entryId, {
+      onSuccess: () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.back();
+      },
+    });
   };
 
   return (
