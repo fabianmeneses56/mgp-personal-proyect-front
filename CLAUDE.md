@@ -90,7 +90,7 @@ Expo resolves these by `NODE_ENV`, highest priority first:
 
 Vars already present in the shell environment always win over the files. That is what
 `scripts/start-with-env.js` (behind `npm run start:prod-api` / `npm run ios:prod-api`)
-relies on to run a *development* bundle against the production API without flipping
+relies on to run a _development_ bundle against the production API without flipping
 `NODE_ENV`. Since `EXPO_PUBLIC_*` values are inlined at bundle time, restart Metro
 (`npx expo start --clear`) after switching environments.
 
@@ -155,9 +155,10 @@ The codebase follows a layered structure that cuts across `core/`, `presentation
     register route — see "Known inconsistencies" below.)
   - `app/(mgp-app)/` — authenticated route group. `_layout.tsx` here (`CheckAuthenticationLayout`) gates the whole group on `useAuthStore().status`: shows a spinner while `"checking"`, redirects to `/auth/login` when `"unauthenticated"`, otherwise renders the `Stack` for `(home)/index`, `category/[id]`, `exercise/[id]`.
 - **`core/`** — domain logic, organized by feature (`auth`, `categories`, `exercises`, `activity`), each with:
-  - `actions/` — plain async functions that call the API directly via `mgpApi` and either return data or throw/return null on failure (inconsistent today — `auth-actions.ts` swallows errors and returns `null`, `category`/`exercise` actions throw `Error`). Check the existing action's error convention before adding a sibling.
+  - `actions/` — plain async functions that call the API directly via `mgpApi`, returning data and throwing `Error` on failure. The `catch` must delegate to `throwApiError(error, "<mensaje por defecto>")` from `core/api/api-error.ts` — never re-implement the `isAxiosError` → `response.data.message` extraction inline. `auth-actions.ts` is the one exception: it swallows errors and returns `null`, because `useAuthStore` depends on that contract (see `specs/09-errores-login-diferenciados.md`).
   - `interface*/` — TypeScript interfaces for the domain shape (e.g. `Category`, `Exercise`, `User`).
   - `core/api/mgpApi.ts` — single shared axios instance. A request interceptor attaches `Authorization: Bearer <token>` from `SecureStorageAdapter` for every request except `/auth/login`.
+  - `core/api/api-error.ts` — `getApiErrorMessage(error, fallback)` pulls the backend message out of an axios error (`response.data.message`, string or the first entry of a `string[]` for NestJS validation errors) and falls back to the given text otherwise; `throwApiError(error, fallback)` returns `never` and throws that message as an `Error`. The message ends up in `onError: (e) => showAlert("Error", e.message)`, so it is user-facing and written in Spanish.
 - **`presentation/`** — feature-aligned hooks, stores, and components that the `app/` screens consume.
   - `presentation/<feature>/hooks/` — React Query wrappers around `core/<feature>/actions` (e.g. `useCategories` = `useQuery`, `useCategory` = `useMutation` that creates/updates a category and invalidates the `["categories"]` query key on success).
   - `presentation/activity/` — `useActivity` (`useQuery` on `["activity"]`, wraps `core/activity/actions/get-activity.action.ts`), `utils/group-activity-by-day.ts` (groups items into "Hoy"/"Ayer"/date sections by local day), and the `ActivityRow`/`ActivityHeaderButton` components consumed by `app/(mgp-app)/activity.tsx`.
