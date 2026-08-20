@@ -1,3 +1,4 @@
+import ErrorState from "@/presentation/common/components/ErrorState";
 import { WeightProgressChart } from "@/presentation/weight-history/components/WeightProgressChart";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
@@ -5,7 +6,7 @@ import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 const ExerciseProgressScreen = () => {
   const { exerciseId, name } = useLocalSearchParams<{
@@ -35,16 +36,13 @@ const ExerciseProgressScreen = () => {
             </Text>
           </View>
         ) : isError ? (
-          <View style={styles.stateWrapper}>
-            <Text style={[styles.stateText, { color: colors.textFaint }]}>
-              No pudimos cargar el historial.
-            </Text>
-            <Pressable onPress={() => refetch()} hitSlop={8}>
-              <Text style={[styles.retryText, { color: colors.primary }]}>
-                Reintentar
-              </Text>
-            </Pressable>
-          </View>
+          <ErrorState
+            variant="inline"
+            message="No pudimos cargar el historial."
+            onRetry={() => refetch()}
+            retryAccessibilityLabel="Reintentar cargar el historial"
+            style={styles.stateWrapper}
+          />
         ) : weightHistory.length < 2 ? (
           <View style={styles.stateWrapper}>
             <Text style={[styles.stateText, { color: colors.textFaint }]}>
@@ -90,10 +88,6 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     textAlign: "center",
     paddingHorizontal: 20,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 13.5,
   },
   hint: {
     fontFamily: Fonts.medium,

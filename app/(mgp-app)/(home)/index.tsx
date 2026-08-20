@@ -11,6 +11,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 import { useCategories } from "@/presentation/categories/hooks/useCategories";
+import EmptyState from "@/presentation/common/components/EmptyState";
+import ErrorState from "@/presentation/common/components/ErrorState";
 import { Fonts } from "@/presentation/theme/fonts";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
@@ -219,48 +221,17 @@ const HomeScreen = () => {
         )}
         ListEmptyComponent={
           categoriesQuery.isError ? (
-            <View
-              style={[
-                styles.emptyState,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceBorder,
-                },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                No pudimos cargar tus categorias.
-              </ThemedText>
-              <Pressable
-                onPress={() => categoriesQuery.refetch()}
-                hitSlop={8}
-                style={styles.retryButton}
-              >
-                <Text style={[styles.retryText, { color: colors.primary }]}>
-                  Reintentar
-                </Text>
-              </Pressable>
-            </View>
+            <ErrorState
+              message="No pudimos cargar tus categorias."
+              onRetry={() => categoriesQuery.refetch()}
+              style={styles.emptyStateSpacing}
+            />
           ) : (
-            <View
-              style={[
-                styles.emptyState,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceBorder,
-                },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                Aun no hay categorias
-              </ThemedText>
-              <ThemedText
-                style={[styles.emptyDescription, { color: colors.textMuted }]}
-              >
-                Crea tu primera categoria con el boton superior para empezar a
-                organizar tus ejercicios.
-              </ThemedText>
-            </View>
+            <EmptyState
+              title="Aun no hay categorias"
+              description="Crea tu primera categoria con el boton superior para empezar a organizar tus ejercicios."
+              style={styles.emptyStateSpacing}
+            />
           )
         }
       />
@@ -401,28 +372,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyState: {
-    borderWidth: 1,
-    borderRadius: 26,
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-    alignItems: "center",
+  emptyStateSpacing: {
     marginTop: 18,
-  },
-  emptyTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  retryButton: {
-    marginTop: 4,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 14,
   },
 });
 

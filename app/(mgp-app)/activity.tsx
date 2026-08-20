@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   SectionList,
   StyleSheet,
@@ -11,6 +10,8 @@ import {
 import ActivityRow from "@/presentation/activity/components/ActivityRow";
 import { useActivity } from "@/presentation/activity/hooks/useActivity";
 import { groupActivityByDay } from "@/presentation/activity/utils/group-activity-by-day";
+import EmptyState from "@/presentation/common/components/EmptyState";
+import ErrorState from "@/presentation/common/components/ErrorState";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
 import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
@@ -82,48 +83,17 @@ const ActivityScreen = () => {
         )}
         ListEmptyComponent={
           activityQuery.isError ? (
-            <View
-              style={[
-                styles.emptyState,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceBorder,
-                },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                No pudimos cargar tu actividad.
-              </ThemedText>
-              <Pressable
-                onPress={() => activityQuery.refetch()}
-                hitSlop={8}
-                style={styles.retryButton}
-              >
-                <Text style={[styles.retryText, { color: colors.primary }]}>
-                  Reintentar
-                </Text>
-              </Pressable>
-            </View>
+            <ErrorState
+              message="No pudimos cargar tu actividad."
+              onRetry={() => activityQuery.refetch()}
+              style={styles.emptyStateSpacing}
+            />
           ) : (
-            <View
-              style={[
-                styles.emptyState,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.surfaceBorder,
-                },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                Aún no hay actividad
-              </ThemedText>
-              <ThemedText
-                style={[styles.emptyDescription, { color: colors.textMuted }]}
-              >
-                Crea o edita una categoría, un ejercicio o un registro de peso y
-                aparecerá aquí.
-              </ThemedText>
-            </View>
+            <EmptyState
+              title="Aún no hay actividad"
+              description="Crea o edita una categoría, un ejercicio o un registro de peso y aparecerá aquí."
+              style={styles.emptyStateSpacing}
+            />
           )
         }
       />
@@ -172,28 +142,8 @@ const styles = StyleSheet.create({
   separator: {
     height: StyleSheet.hairlineWidth,
   },
-  emptyState: {
-    borderWidth: 1,
-    borderRadius: 26,
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-    alignItems: "center",
+  emptyStateSpacing: {
     marginTop: 18,
-  },
-  emptyTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  retryButton: {
-    marginTop: 4,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 14,
   },
 });
 
