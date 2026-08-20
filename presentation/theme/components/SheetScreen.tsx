@@ -1,7 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemeColor } from "../hooks/use-theme-color";
+import { useThemeColors } from "../hooks/use-theme-colors";
 
 interface SheetScreenProps {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ interface SheetScreenProps {
 // sheetAllowedDetents: "fitToContents" el contenido no debe usar flex: 1.
 const SheetScreen = ({ children }: SheetScreenProps) => {
   const insets = useSafeAreaInsets();
-  const handleColor = useThemeColor({}, "sheetHandle");
+  const colors = useThemeColors();
 
   return (
     <View
@@ -22,7 +22,9 @@ const SheetScreen = ({ children }: SheetScreenProps) => {
     >
       {Platform.OS === "android" ? (
         // sheetGrabberVisible solo existe en iOS; en Android dibujamos el handle.
-        <View style={[styles.handle, { backgroundColor: handleColor }]} />
+        <View
+          style={[styles.handle, { backgroundColor: colors.sheetHandle }]}
+        />
       ) : null}
       {children}
     </View>

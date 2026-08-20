@@ -1,34 +1,45 @@
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useLogin } from "@/presentation/auth/hooks/useLogin";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const LoginScreen = () => {
-  const backgroundColor = useThemeColor({}, "background");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
+  const colors = useThemeColors();
 
   const { form, isPosting, onChangeForm, onLogin } = useLogin();
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.container, { backgroundColor }]}
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: colors.background },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <View style={[styles.logoMark, { backgroundColor: primaryColor, shadowColor: primaryColor }]}>
+          <View
+            style={[
+              styles.logoMark,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+            ]}
+          >
             <Ionicons name="barbell-outline" size={28} color="#FFFFFF" />
           </View>
 
           <ThemedText type="title" style={styles.title}>
             Ingresar
           </ThemedText>
-          <ThemedText style={[styles.subtitle, { color: mutedText }]}>
+          <ThemedText style={[styles.subtitle, { color: colors.textMuted }]}>
             Por favor ingresa para continuar
           </ThemedText>
 

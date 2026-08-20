@@ -14,7 +14,7 @@ import SheetScreen from "@/presentation/theme/components/SheetScreen";
 import ThemedButton from "@/presentation/theme/components/ThemedButton";
 import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const WEIGHT_UNITS = ["kg", "lb"];
 
@@ -22,18 +22,13 @@ const NewExerciseScreen = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const queryClient = useQueryClient();
 
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
-  const faintText = useThemeColor({}, "textFaint");
+  const colors = useThemeColors();
 
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseWeight, setExerciseWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("kg");
-  const [selectedImage, setSelectedImage] = useState<PickedExerciseImage | null>(
-    null
-  );
+  const [selectedImage, setSelectedImage] =
+    useState<PickedExerciseImage | null>(null);
   const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
   const { pickImage } = usePickExerciseImage();
 
@@ -92,7 +87,9 @@ const NewExerciseScreen = () => {
       <ThemedText type="subtitle" style={styles.modalTitle}>
         Nuevo ejercicio
       </ThemedText>
-      <ThemedText style={[styles.modalDescription, { color: mutedText }]}>
+      <ThemedText
+        style={[styles.modalDescription, { color: colors.textMuted }]}
+      >
         Agrega el nombre, el peso y la unidad para esta categoria.
       </ThemedText>
 
@@ -116,20 +113,25 @@ const NewExerciseScreen = () => {
           style={styles.weightInput}
         />
 
-        <View style={[styles.unitToggle, { backgroundColor: borderColor }]}>
+        <View
+          style={[styles.unitToggle, { backgroundColor: colors.surfaceBorder }]}
+        >
           {WEIGHT_UNITS.map((unit) => (
             <Pressable
               key={unit}
               onPress={() => setWeightUnit(unit)}
               style={[
                 styles.unitOption,
-                weightUnit === unit && { backgroundColor: surfaceColor },
+                weightUnit === unit && { backgroundColor: colors.surface },
               ]}
             >
               <Text
                 style={[
                   styles.unitOptionText,
-                  { color: weightUnit === unit ? primaryColor : faintText },
+                  {
+                    color:
+                      weightUnit === unit ? colors.primary : colors.textFaint,
+                  },
                 ]}
               >
                 {unit}
@@ -142,8 +144,18 @@ const NewExerciseScreen = () => {
       {selectedImage ? (
         <View style={styles.imagePreviewCard}>
           {imagePreviewFailed ? (
-            <View style={[styles.imagePreview, styles.imagePreviewFallback, { borderColor }]}>
-              <Ionicons name="image-outline" size={22} color={mutedText} />
+            <View
+              style={[
+                styles.imagePreview,
+                styles.imagePreviewFallback,
+                { borderColor: colors.surfaceBorder },
+              ]}
+            >
+              <Ionicons
+                name="image-outline"
+                size={22}
+                color={colors.textMuted}
+              />
             </View>
           ) : (
             <Image
@@ -159,8 +171,14 @@ const NewExerciseScreen = () => {
               <Text style={styles.imageAddedText}>Imagen añadida</Text>
             </View>
             <Pressable style={styles.changeImageChip} onPress={handlePickImage}>
-              <Ionicons name="camera-outline" size={12} color={primaryColor} />
-              <Text style={[styles.changeImageChipText, { color: primaryColor }]}>
+              <Ionicons
+                name="camera-outline"
+                size={12}
+                color={colors.primary}
+              />
+              <Text
+                style={[styles.changeImageChipText, { color: colors.primary }]}
+              >
                 Cambiar
               </Text>
             </Pressable>
@@ -168,11 +186,11 @@ const NewExerciseScreen = () => {
         </View>
       ) : (
         <Pressable
-          style={[styles.addImageButton, { borderColor: faintText }]}
+          style={[styles.addImageButton, { borderColor: colors.textFaint }]}
           onPress={handlePickImage}
         >
-          <Ionicons name="image-outline" size={19} color={primaryColor} />
-          <Text style={[styles.addImageButtonText, { color: primaryColor }]}>
+          <Ionicons name="image-outline" size={19} color={colors.primary} />
+          <Text style={[styles.addImageButtonText, { color: colors.primary }]}>
             Agregar imagen
           </Text>
         </Pressable>
@@ -189,7 +207,9 @@ const NewExerciseScreen = () => {
       </View>
 
       <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={[styles.cancelText, { color: mutedText }]}>Cancelar</Text>
+        <Text style={[styles.cancelText, { color: colors.textMuted }]}>
+          Cancelar
+        </Text>
       </Pressable>
     </SheetScreen>
   );

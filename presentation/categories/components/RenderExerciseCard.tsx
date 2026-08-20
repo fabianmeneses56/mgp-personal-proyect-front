@@ -2,7 +2,7 @@ import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { toDisplayWeight } from "@/core/weight-history/interfaces/weight-history.interface";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -34,15 +34,7 @@ const RenderExerciseCard = ({
   onDelete: (exercise: Exercise) => void;
   isDeleting: boolean;
 }) => {
-  const backgroundColor = useThemeColor({}, "background");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const textColor = useThemeColor({}, "text");
-  const faintText = useThemeColor({}, "textFaint");
-  const primaryColor = useThemeColor({}, "primary");
-  const primarySoft = useThemeColor({}, "primarySoft");
-  const dangerBg = useThemeColor({}, "dangerBg");
-  const dangerText = useThemeColor({}, "danger");
+  const colors = useThemeColors();
 
   return (
     <Pressable
@@ -62,14 +54,22 @@ const RenderExerciseCard = ({
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: surfaceColor,
-          borderColor,
+          backgroundColor: colors.surface,
+          borderColor: colors.surfaceBorder,
           opacity: pressed ? 0.75 : 1,
         },
       ]}
     >
-      <View style={[styles.badge, { backgroundColor, borderColor }]}>
-        <Text style={[styles.badgeText, { color: primaryColor }]}>
+      <View
+        style={[
+          styles.badge,
+          {
+            backgroundColor: colors.background,
+            borderColor: colors.surfaceBorder,
+          },
+        ]}
+      >
+        <Text style={[styles.badgeText, { color: colors.primary }]}>
           {index + 1}
         </Text>
       </View>
@@ -83,8 +83,10 @@ const RenderExerciseCard = ({
           {item.name}
         </ThemedText>
         <View style={styles.metaRow}>
-          <Text style={[styles.metaLabel, { color: faintText }]}>Peso</Text>
-          <Text style={[styles.metaValue, { color: textColor }]}>
+          <Text style={[styles.metaLabel, { color: colors.textFaint }]}>
+            Peso
+          </Text>
+          <Text style={[styles.metaValue, { color: colors.text }]}>
             {getExerciseWeightLabel(item)}
           </Text>
         </View>
@@ -98,16 +100,21 @@ const RenderExerciseCard = ({
         style={({ pressed }) => [
           styles.rowActionCircle,
           {
-            backgroundColor: dangerBg,
+            backgroundColor: colors.dangerBg,
             opacity: pressed || isDeleting ? 0.6 : 1,
           },
         ]}
       >
-        <Ionicons name="trash-outline" size={15} color={dangerText} />
+        <Ionicons name="trash-outline" size={15} color={colors.danger} />
       </Pressable>
 
-      <View style={[styles.rowActionCircle, { backgroundColor: primarySoft }]}>
-        <Ionicons name="chevron-forward" size={16} color={primaryColor} />
+      <View
+        style={[
+          styles.rowActionCircle,
+          { backgroundColor: colors.primarySoft },
+        ]}
+      >
+        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
       </View>
     </Pressable>
   );

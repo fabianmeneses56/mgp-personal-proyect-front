@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   SectionList,
   StyleSheet,
@@ -11,33 +10,39 @@ import {
 import ActivityRow from "@/presentation/activity/components/ActivityRow";
 import { useActivity } from "@/presentation/activity/hooks/useActivity";
 import { groupActivityByDay } from "@/presentation/activity/utils/group-activity-by-day";
+import EmptyState from "@/presentation/common/components/EmptyState";
+import ErrorState from "@/presentation/common/components/ErrorState";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 
 const ActivityScreen = () => {
   const { activityQuery } = useActivity();
 
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const backgroundColor = useThemeColor({}, "background");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
+  const colors = useThemeColors();
 
   if (activityQuery.isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor }]}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <View
           style={[
             styles.loadingCard,
-            { backgroundColor: surfaceColor, borderColor },
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceBorder,
+            },
           ]}
         >
-          <ActivityIndicator size={32} color={primaryColor} />
+          <ActivityIndicator size={32} color={colors.primary} />
           <ThemedText type="subtitle" style={styles.loadingTitle}>
             Cargando actividad
           </ThemedText>
-          <ThemedText style={[styles.loadingText, { color: mutedText }]}>
+          <ThemedText style={[styles.loadingText, { color: colors.textMuted }]}>
             Estamos trayendo tus últimos movimientos.
           </ThemedText>
         </View>
@@ -48,7 +53,7 @@ const ActivityScreen = () => {
   const sections = groupActivityByDay(activityQuery.data ?? []);
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -59,54 +64,36 @@ const ActivityScreen = () => {
           <RefreshControl
             refreshing={activityQuery.isRefetching}
             onRefresh={() => activityQuery.refetch()}
-            tintColor={primaryColor}
+            tintColor={colors.primary}
           />
         }
         renderSectionHeader={({ section }) => (
-          <Text style={[styles.sectionTitle, { color: mutedText }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
             {section.title}
           </Text>
         )}
         renderItem={({ item }) => <ActivityRow item={item} />}
         ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: borderColor }]} />
+          <View
+            style={[
+              styles.separator,
+              { backgroundColor: colors.surfaceBorder },
+            ]}
+          />
         )}
         ListEmptyComponent={
           activityQuery.isError ? (
-            <View
-              style={[
-                styles.emptyState,
-                { backgroundColor: surfaceColor, borderColor },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                No pudimos cargar tu actividad.
-              </ThemedText>
-              <Pressable
-                onPress={() => activityQuery.refetch()}
-                hitSlop={8}
-                style={styles.retryButton}
-              >
-                <Text style={[styles.retryText, { color: primaryColor }]}>
-                  Reintentar
-                </Text>
-              </Pressable>
-            </View>
+            <ErrorState
+              message="No pudimos cargar tu actividad."
+              onRetry={() => activityQuery.refetch()}
+              style={styles.emptyStateSpacing}
+            />
           ) : (
-            <View
-              style={[
-                styles.emptyState,
-                { backgroundColor: surfaceColor, borderColor },
-              ]}
-            >
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                Aún no hay actividad
-              </ThemedText>
-              <ThemedText style={[styles.emptyDescription, { color: mutedText }]}>
-                Crea o edita una categoría, un ejercicio o un registro de peso
-                y aparecerá aquí.
-              </ThemedText>
-            </View>
+            <EmptyState
+              title="Aún no hay actividad"
+              description="Crea o edita una categoría, un ejercicio o un registro de peso y aparecerá aquí."
+              style={styles.emptyStateSpacing}
+            />
           )
         }
       />
@@ -155,28 +142,8 @@ const styles = StyleSheet.create({
   separator: {
     height: StyleSheet.hairlineWidth,
   },
-  emptyState: {
-    borderWidth: 1,
-    borderRadius: 26,
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-    alignItems: "center",
+  emptyStateSpacing: {
     marginTop: 18,
-  },
-  emptyTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  retryButton: {
-    marginTop: 4,
-  },
-  retryText: {
-    fontFamily: Fonts.bold,
-    fontSize: 14,
   },
 });
 

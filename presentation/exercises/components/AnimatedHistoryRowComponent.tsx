@@ -1,18 +1,12 @@
 import { WeightHistoryEntry } from "@/core/weight-history/interfaces/weight-history.interface";
 import { showConfirm, showOptions } from "@/helpers/alerts/alert.service";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   Extrapolation,
@@ -127,12 +121,7 @@ const AnimatedHistoryRowComponent = ({
   swipeableRefs: React.RefObject<Map<string, { close: () => void }>>;
   openRowIdRef: React.RefObject<string | null>;
 }) => {
-  const backgroundColor = useThemeColor({}, "background");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const textColor = useThemeColor({}, "text");
-  const faintText = useThemeColor({}, "textFaint");
-  const primaryColor = useThemeColor({}, "primary");
-  const mutedText = useThemeColor({}, "textMuted");
+  const colors = useThemeColors();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -195,7 +184,12 @@ const AnimatedHistoryRowComponent = ({
         setDeletingId(null);
       }}
     >
-      <View style={[styles.historyRowWrapper, { borderColor }]}>
+      <View
+        style={[
+          styles.historyRowWrapper,
+          { borderColor: colors.surfaceBorder },
+        ]}
+      >
         <ReanimatedSwipeable
           ref={(el) => {
             if (el) swipeableRefs.current.set(entry.id, el);
@@ -225,7 +219,7 @@ const AnimatedHistoryRowComponent = ({
           renderRightActions={(_, drag) => (
             <SwipeRightActions
               drag={drag}
-              primaryColor={primaryColor}
+              primaryColor={colors.primary}
               onEdit={() => handleEditEntry(entry)}
               onDelete={() => handleDeleteEntry(entry.id)}
             />
@@ -255,18 +249,18 @@ const AnimatedHistoryRowComponent = ({
                   break;
               }
             }}
-            style={[styles.historyRow, { backgroundColor }]}
+            style={[styles.historyRow, { backgroundColor: colors.background }]}
           >
             <View style={styles.historyRowTop}>
-              <Text style={[styles.historyWeight, { color: textColor }]}>
+              <Text style={[styles.historyWeight, { color: colors.text }]}>
                 {entry.weight} {entry.weightUnit}
               </Text>
-              <Text style={[styles.historyDate, { color: faintText }]}>
+              <Text style={[styles.historyDate, { color: colors.textFaint }]}>
                 {new Date(entry.date).toLocaleDateString()}
               </Text>
             </View>
             {entry.note ? (
-              <Text style={[styles.historyNote, { color: mutedText }]}>
+              <Text style={[styles.historyNote, { color: colors.textMuted }]}>
                 {entry.note}
               </Text>
             ) : null}

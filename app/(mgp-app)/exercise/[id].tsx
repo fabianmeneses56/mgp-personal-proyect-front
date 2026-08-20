@@ -4,7 +4,7 @@ import WeightHistory from "@/presentation/exercises/components/WeightHistory";
 import { useExerciseActions } from "@/presentation/exercises/hooks/useExerciseActions";
 import { ThemedText } from "@/presentation/theme/components/themed-text";
 import { Fonts } from "@/presentation/theme/fonts";
-import { useThemeColor } from "@/presentation/theme/hooks/use-theme-color";
+import { useThemeColors } from "@/presentation/theme/hooks/use-theme-colors";
 import { WeightProgressChart } from "@/presentation/weight-history/components/WeightProgressChart";
 import { useWeightHistoryManager } from "@/presentation/weight-history/hooks/useWeightHistoryManager";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,17 +27,7 @@ const ExerciseDetailScreen = () => {
     categoryName?: string;
     imageUrl?: string;
   }>();
-  const backgroundColor = useThemeColor({}, "background");
-  const surfaceColor = useThemeColor({}, "surface");
-  const borderColor = useThemeColor({}, "surfaceBorder");
-  const textColor = useThemeColor({}, "text");
-  const faintText = useThemeColor({}, "textFaint");
-  const primaryColor = useThemeColor({}, "primary");
-  const primarySoft = useThemeColor({}, "primarySoft");
-  const mutedText = useThemeColor({}, "textMuted");
-  const dangerBg = useThemeColor({}, "dangerBg");
-  const dangerBorder = useThemeColor({}, "dangerBorder");
-  const dangerText = useThemeColor({}, "danger");
+  const colors = useThemeColors();
 
   const {
     weightHistory,
@@ -74,25 +64,30 @@ const ExerciseDetailScreen = () => {
 
   return (
     <ScrollView
-      style={[styles.scrollView, { backgroundColor }]}
+      style={[styles.scrollView, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={() => refetch()}
-          tintColor={primaryColor}
+          tintColor={colors.primary}
         />
       }
     >
       <View
         style={[
           styles.heroCard,
-          { backgroundColor: surfaceColor, borderColor },
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.surfaceBorder,
+          },
         ]}
       >
-        <View style={[styles.heroBadge, { backgroundColor: primarySoft }]}>
-          <Text style={[styles.heroBadgeText, { color: primaryColor }]}>
+        <View
+          style={[styles.heroBadge, { backgroundColor: colors.primarySoft }]}
+        >
+          <Text style={[styles.heroBadgeText, { color: colors.primary }]}>
             Detalle
           </Text>
         </View>
@@ -112,10 +107,16 @@ const ExerciseDetailScreen = () => {
           </Pressable>
         ) : (
           <View
-            style={[styles.heroImagePlaceholder, { borderColor: faintText }]}
+            style={[
+              styles.heroImagePlaceholder,
+              { borderColor: colors.textFaint },
+            ]}
           >
             <Text
-              style={[styles.heroImagePlaceholderText, { color: faintText }]}
+              style={[
+                styles.heroImagePlaceholderText,
+                { color: colors.textFaint },
+              ]}
             >
               IMAGEN DEL EJERCICIO
             </Text>
@@ -129,14 +130,14 @@ const ExerciseDetailScreen = () => {
             style={({ pressed }) => [
               styles.changeImageButton,
               {
-                backgroundColor: primarySoft,
+                backgroundColor: colors.primarySoft,
                 opacity: pressed || isChangingImage ? 0.7 : 1,
               },
             ]}
           >
-            <Ionicons name="camera-outline" size={16} color={primaryColor} />
+            <Ionicons name="camera-outline" size={16} color={colors.primary} />
             <Text
-              style={[styles.changeImageButtonText, { color: primaryColor }]}
+              style={[styles.changeImageButtonText, { color: colors.primary }]}
             >
               {isChangingImage ? "Actualizando..." : "Cambiar imagen"}
             </Text>
@@ -147,7 +148,7 @@ const ExerciseDetailScreen = () => {
           {name ?? "Ejercicio"}
         </ThemedText>
 
-        <Text style={[styles.subtitle, { color: mutedText }]}>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Categoria: {categoryName ?? "Sin categoria"}
         </Text>
       </View>
@@ -155,16 +156,19 @@ const ExerciseDetailScreen = () => {
       <View
         style={[
           styles.metricCard,
-          { backgroundColor: surfaceColor, borderColor },
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.surfaceBorder,
+          },
         ]}
       >
-        <Text style={[styles.metricLabel, { color: faintText }]}>
+        <Text style={[styles.metricLabel, { color: colors.textFaint }]}>
           Peso asignado
         </Text>
-        <Text style={[styles.metricValue, { color: primaryColor }]}>
+        <Text style={[styles.metricValue, { color: colors.primary }]}>
           {displayWeight}
         </Text>
-        <Text style={[styles.metricHint, { color: mutedText }]}>
+        <Text style={[styles.metricHint, { color: colors.textMuted }]}>
           Usa este valor para identificar rapidamente la carga del ejercicio.
         </Text>
       </View>
@@ -182,17 +186,17 @@ const ExerciseDetailScreen = () => {
           style={({ pressed }) => [
             styles.progressCard,
             {
-              backgroundColor: surfaceColor,
-              borderColor,
+              backgroundColor: colors.surface,
+              borderColor: colors.surfaceBorder,
               opacity: pressed ? 0.85 : 1,
             },
           ]}
         >
           <View style={styles.progressCardHeader}>
-            <Text style={[styles.progressCardTitle, { color: textColor }]}>
+            <Text style={[styles.progressCardTitle, { color: colors.text }]}>
               Progreso de peso
             </Text>
-            <Text style={[styles.progressCardHint, { color: primaryColor }]}>
+            <Text style={[styles.progressCardHint, { color: colors.primary }]}>
               Ver progreso →
             </Text>
           </View>
@@ -203,16 +207,21 @@ const ExerciseDetailScreen = () => {
       <View
         style={[
           styles.dangerZone,
-          { backgroundColor: dangerBg, borderColor: dangerBorder },
+          {
+            backgroundColor: colors.dangerBg,
+            borderColor: colors.dangerBorder,
+          },
         ]}
       >
         <View style={styles.dangerZoneHeader}>
-          <Ionicons name="warning-outline" size={20} color={dangerText} />
-          <Text style={[styles.dangerZoneTitle, { color: dangerText }]}>
+          <Ionicons name="warning-outline" size={20} color={colors.danger} />
+          <Text style={[styles.dangerZoneTitle, { color: colors.danger }]}>
             Zona de peligro
           </Text>
         </View>
-        <Text style={[styles.dangerZoneDescription, { color: mutedText }]}>
+        <Text
+          style={[styles.dangerZoneDescription, { color: colors.textMuted }]}
+        >
           Si ya no necesitas este ejercicio, puedes eliminarlo desde aqui.
         </Text>
         <Pressable
@@ -221,7 +230,7 @@ const ExerciseDetailScreen = () => {
           style={({ pressed }) => [
             styles.deleteExerciseButton,
             {
-              backgroundColor: dangerText,
+              backgroundColor: colors.danger,
               opacity: pressed || isDeleting ? 0.82 : 1,
             },
           ]}
