@@ -113,12 +113,14 @@ describe("useWeightHistoryManager", () => {
       date: "2024-01-01T00:00:00.000Z",
     };
     await act(async () => {
-      await result.current.saveEntry(payload);
+      result.current.saveEntry(payload);
     });
 
-    expect(mockedCreateWeightHistory).toHaveBeenCalledWith(
-      "exercise-1",
-      payload,
+    await waitFor(() =>
+      expect(mockedCreateWeightHistory).toHaveBeenCalledWith(
+        "exercise-1",
+        payload,
+      ),
     );
     expect(mockedUpdateWeightHistory).not.toHaveBeenCalled();
   });
@@ -142,13 +144,15 @@ describe("useWeightHistoryManager", () => {
       date: "2024-01-01T00:00:00.000Z",
     };
     await act(async () => {
-      await result.current.saveEntry(payload, "entry-1");
+      result.current.saveEntry(payload, "entry-1");
     });
 
-    expect(mockedUpdateWeightHistory).toHaveBeenCalledWith(
-      "exercise-1",
-      "entry-1",
-      payload,
+    await waitFor(() =>
+      expect(mockedUpdateWeightHistory).toHaveBeenCalledWith(
+        "exercise-1",
+        "entry-1",
+        payload,
+      ),
     );
     expect(mockedCreateWeightHistory).not.toHaveBeenCalled();
   });
@@ -166,20 +170,58 @@ describe("useWeightHistoryManager", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
+    const onSuccess = jest.fn();
+
     await act(async () => {
-      await expect(
-        result.current.saveEntry({
+      result.current.saveEntry(
+        {
           weight: 80,
           weightUnit: "kg",
           date: "2024-01-01T00:00:00.000Z",
-        }),
-      ).rejects.toThrow();
+        },
+        undefined,
+        { onSuccess },
+      );
     });
 
-    expect(mockedAlert).toHaveBeenCalledWith(
-      "Error",
-      "Error al registrar el peso",
+    await waitFor(() =>
+      expect(mockedAlert).toHaveBeenCalledWith(
+        "Error",
+        "Error al registrar el peso",
+      ),
     );
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("runs the per-call onSuccess when the mutation resolves", async () => {
+    mockedGetWeightHistory.mockResolvedValue([]);
+    mockedCreateWeightHistory.mockResolvedValue(
+      buildWeightHistoryApiEntries()[0],
+    );
+
+    const { result } = await renderHook(
+      () => useWeightHistoryManager("exercise-1"),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const onSuccess = jest.fn();
+
+    await act(async () => {
+      result.current.saveEntry(
+        {
+          weight: 80,
+          weightUnit: "kg",
+          date: "2024-01-01T00:00:00.000Z",
+        },
+        undefined,
+        { onSuccess },
+      );
+    });
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+    expect(mockedAlert).not.toHaveBeenCalled();
   });
 
   it("invalidates the weight-history query on a successful mutation", async () => {
@@ -197,7 +239,7 @@ describe("useWeightHistoryManager", () => {
     expect(mockedGetWeightHistory).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await result.current.saveEntry({
+      result.current.saveEntry({
         weight: 80,
         weightUnit: "kg",
         date: "2024-01-01T00:00:00.000Z",
