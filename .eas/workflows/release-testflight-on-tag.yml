@@ -47,11 +47,16 @@ jobs:
       platform: ios
       profile: production
 
-  testflight:
+  # `type: submit` y no `type: testflight`: el job de testflight solo acepta un
+  # build de EAS (`build_id`) en planes de pago. En el plan gratuito hace lo
+  # mismo que aquí necesitamos —subir el .ipa a App Store Connect— usando el
+  # perfil `submit.production` de eas.json (ascAppId). Lo que se pierde es el
+  # changelog automático: las notas de "Qué probar" se escriben en App Store
+  # Connect.
+  submit_ios:
     name: Subir a TestFlight
     needs: [build_ios]
-    type: testflight
+    type: submit
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
-      changelog: |
-        Release ${{ github.ref_name }}
+      profile: production
