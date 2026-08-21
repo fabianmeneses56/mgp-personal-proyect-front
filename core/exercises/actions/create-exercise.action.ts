@@ -1,7 +1,7 @@
 import { mgpApi } from "@/core/api/mgpApi";
+import { throwApiError } from "@/core/api/api-error";
 import { Exercise } from "@/core/categories/interfaces/category.interface";
 import { PickedExerciseImage } from "@/core/exercises/interfaces/picked-exercise-image.interface";
-import { isAxiosError } from "axios";
 
 export interface CreateExercisePayload {
   name: string;
@@ -30,15 +30,6 @@ export const createExercise = async (exercise: CreateExercisePayload) => {
     const { data } = await mgpApi.post<Exercise>("/exercises", formData);
     return data;
   } catch (error) {
-    if (isAxiosError(error)) {
-      const responseMessage =
-        typeof error.response?.data?.message === "string"
-          ? error.response.data.message
-          : undefined;
-
-      throw new Error(responseMessage || "Error al crear el ejercicio");
-    }
-
-    throw new Error("Error al crear el ejercicio");
+    throwApiError(error, "Error al crear el ejercicio");
   }
 };

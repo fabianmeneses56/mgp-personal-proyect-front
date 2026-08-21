@@ -27,11 +27,22 @@ describe("getCategoriesByUser", () => {
     expect(result).toEqual(categories);
   });
 
-  it("throws when the request fails", async () => {
+  it("propagates the response message from an axios error", async () => {
+    mockedMgpApi.get.mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { message: "Categories unavailable" } },
+    });
+
+    await expect(getCategoriesByUser()).rejects.toThrow(
+      "Categories unavailable",
+    );
+  });
+
+  it("falls back to a generic message when the error has no response message", async () => {
     mockedMgpApi.get.mockRejectedValue(new Error("Network error"));
 
     await expect(getCategoriesByUser()).rejects.toThrow(
-      "Unable to load categories",
+      "Error al cargar las categorias",
     );
   });
 });

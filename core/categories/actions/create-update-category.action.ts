@@ -1,9 +1,6 @@
 import { mgpApi } from "@/core/api/mgpApi";
+import { throwApiError } from "@/core/api/api-error";
 import { Category } from "../interfaces/category.interface";
-
-interface response {
-  name: string;
-}
 
 export const updateCreateCategory = (category: Partial<Category>) => {
   //   product.stock = isNaN(Number(product.stock)) ? 0 : Number(product.stock);
@@ -28,6 +25,6 @@ async function createCategory(category: Partial<Category>) {
 
     return data;
   } catch (error) {
-    throw new Error("Error al guardar la categoria");
+    throwApiError(error, "Error al guardar la categoria");
   }
 }

@@ -49,7 +49,18 @@ describe("updateCreateCategory", () => {
     });
   });
 
-  it("throws when the request fails", async () => {
+  it("propagates the response message from an axios error", async () => {
+    mockedMgpApi.post.mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { message: "Category name already exists" } },
+    });
+
+    await expect(
+      updateCreateCategory(buildCategory({ id: "new" })),
+    ).rejects.toThrow("Category name already exists");
+  });
+
+  it("falls back to a generic message when the error has no response message", async () => {
     mockedMgpApi.post.mockRejectedValue(new Error("Network error"));
 
     await expect(
