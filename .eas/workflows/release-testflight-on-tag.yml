@@ -5,7 +5,7 @@ name: Release iOS a TestFlight
 # crea una versión en TestFlight, así que el release es un acto deliberado.
 on:
   push:
-    tags: ['v*.*.*']
+    tags: ["v*.*.*"]
 
 jobs:
   verify_version:
@@ -15,6 +15,10 @@ jobs:
     # número distinto al del tag y no queda registro de qué se publicó.
     # Falla antes de gastar el build.
     steps:
+      # Los jobs custom corren en una VM limpia sin el codigo: a diferencia de
+      # los de tipo build/testflight, hay que clonar el repo a mano o
+      # `require('./app.json')` no encuentra el archivo.
+      - uses: eas/checkout
       - name: Comparar tag con expo.version
         run: |
           REF="${{ github.ref_name }}"
