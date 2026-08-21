@@ -116,7 +116,11 @@ That runs `.eas/workflows/release-testflight-on-tag.yml` on EAS, in three jobs:
    before spending a build. Skipped on manual runs, where `github.ref_name` is a
    branch rather than a tag.
 2. `build_ios` — `production` profile, certs/provisioning managed by EAS.
-3. `testflight` — uploads the build and waits for App Store Connect processing.
+3. `submit_ios` — uploads the build to App Store Connect / TestFlight, using the
+   `submit.production` profile in `eas.json` (`ascAppId`). This is a `type: submit`
+   job on purpose: the `type: testflight` job only accepts an EAS build (`build_id`)
+   on paid plans. The trade-off is that the release notes ("What to Test") are not
+   set from the workflow — write them in App Store Connect.
 
 To re-run a failed release without moving the tag:
 
